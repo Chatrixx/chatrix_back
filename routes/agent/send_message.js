@@ -154,7 +154,6 @@ router.post("/", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error in /api/reply:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
