@@ -5,6 +5,7 @@ import manychat from "../../db/models/manychat/manychat.js";
 import user from "../../db/models/user.js";
 import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
+import { getChannelIndicator } from "../../util/channel.js";
 
 dotenv.config();
 
@@ -54,7 +55,7 @@ async function reply({ input, threadId, assistantId }) {
 router.post("/", async (req, res) => {
   if (!req.body.input)
     return res.status(400).json({ error: "Input is required" });
-
+  const indicator = getChannelIndicator(req.body.channel) ?? null;
   try {
     await dbConnect();
     await manychat.create(req.body);
@@ -68,13 +69,13 @@ router.post("/", async (req, res) => {
     const clinic_assistant_id = related_clinic?.openai_assistant?.assistant_id;
     if (!clinic_assistant_id)
       return res.status(404).json({ error: "Assistant not found" });
-
+    if (!indicator) return res.status(400).json({ error: "Invalid channel" });
     const contact_channel = req.body.channel;
     const { input } = req.body;
 
     const customer = await user.findOne({
-      "channels.instagram.profile_info.username":
-        req.body?.contact_data?.ig_username,
+      [`channels.${req.body.channel}.profile_info.${indicator}`]:
+        req.body.contact_data?.[indicator],
       clinic_id: req.body.clinic_id,
     });
 
@@ -112,7 +113,7 @@ router.post("/", async (req, res) => {
         channels: {
           [contact_channel]: {
             profile_info: {
-              username: req.body.contact_data.ig_username,
+              [indicator]: req.body.contact_data?.[indicator],
               name: req.body.contact_data.full_name,
               profile_pic: req.body.contact_data.profile_pic,
             },
@@ -140,18 +141,7 @@ router.post("/", async (req, res) => {
     }
 
     res.status(200).json({
-      version: "v2",
-      content: {
-        type: "instagram",
-        messages: [
-          {
-            type: "text",
-            text: answer.messages?.body?.data?.[0]?.content[0]?.text?.value,
-          },
-        ],
-        actions: [],
-        quick_replies: [],
-      },
+      message: "Message created successfully",
     });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error" });

@@ -41,6 +41,43 @@ router.post("/", async (req, res) => {
   if (!customer) return res.status(404).json({ error: "Customer not found" });
   const messages = customer.channels[req.body.channel].messages;
   const fresh_messages = messages.filter((message) => message.fresh);
+  const last_message = fresh_messages[fresh_messages.length - 1];
+
+  await user.updateOne(
+    {
+      clinic_id: req.body.clinic_id,
+      [`channels.${req.body.channel}.profile_info.${indicator}`]:
+        req.body.contact_data?.[indicator],
+    },
+    {
+      $set: {
+        [`channels.${req.body.channel}.messages.$[elem].fresh`]: false,
+      },
+    },
+    {
+      arrayFilters: [
+        {
+          "elem.fresh": true,
+        },
+      ],
+    }
+  );
+  if (!last_message)
+    return res.status(404).json({ error: "There is no fresh message" });
+  return res.status(200).json({
+    version: "v2",
+    content: {
+      type: req.body.channel,
+      messages: [
+        {
+          type: last_message.type,
+          text: last_message.content,
+        },
+      ],
+      actions: [],
+      quick_replies: [],
+    },
+  });
 });
 
 export default router;
