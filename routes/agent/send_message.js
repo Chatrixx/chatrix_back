@@ -140,7 +140,7 @@ router.post("/", async (req, res) => {
       );
     }
 
-    res.status(400).json({
+    res.status(404).json({
       message: "Message created successfully",
     });
   } catch (error) {
