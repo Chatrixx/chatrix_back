@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  node-app:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: always
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/usr/share/nginx/html
+    depends_on:
+      - node-app
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
