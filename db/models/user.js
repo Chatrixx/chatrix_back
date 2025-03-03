@@ -1,24 +1,16 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const InstagramSchema = new mongoose.Schema({
   username: String,
   name: String,
   thread_id: String,
-  profile_info: {
-    username: String,
-    name: String,
-    profile_pic: String,
-  },
+  profile_info: mongoose.Schema.Types.Mixed,
   messages: [{ type: mongoose.Schema.Types.Mixed }],
   last_updated: Date,
 });
 
 const WhatsappSchema = new mongoose.Schema({
-  profile_info: {
-    phone: String,
-    name: String,
-    username: String,
-  },
+  profile_info: mongoose.Schema.Types.Mixed,
   messages: [{ type: mongoose.Schema.Types.Mixed }],
   last_updated: Date,
 });
