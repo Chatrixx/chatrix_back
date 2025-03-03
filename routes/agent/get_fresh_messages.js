@@ -40,8 +40,11 @@ router.post("/", async (req, res) => {
 
   if (!customer) return res.status(404).json({ error: "Customer not found" });
   const messages = customer.channels[req.body.channel].messages;
-  const fresh_messages = messages.filter((message) => message.fresh);
-  const last_message = fresh_messages[fresh_messages.length - 1];
+  const fresh_messages = messages.filter(
+    (message) => message.fresh && message.role === "agent"
+  );
+  if (fresh_messages.length === 0)
+    return res.status(404).json({ error: "No fresh messages" });
 
   await user.updateOne(
     {
@@ -62,17 +65,15 @@ router.post("/", async (req, res) => {
       ],
     }
   );
-  if (!last_message)
-    return res.status(404).json({ error: "There is no fresh message" });
   return res.status(200).json({
     version: "v2",
     content: {
       type: req.body.channel,
       messages: [
-        {
-          type: last_message.type,
-          text: last_message.content,
-        },
+        fresh_messages.map((message) => ({
+          type: message.type,
+          text: message.content,
+        })),
       ],
       actions: [],
       quick_replies: [],
