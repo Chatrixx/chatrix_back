@@ -69,12 +69,11 @@ router.post("/", async (req, res) => {
     version: "v2",
     content: {
       type: req.body.channel,
-      messages: [
-        fresh_messages.map((message) => ({
-          type: message.type,
-          text: message.content,
-        })),
-      ],
+      messages: fresh_messages.map((message) => ({
+        type: message.type,
+        text: message.content,
+      })),
+
       actions: [],
       quick_replies: [],
     },
