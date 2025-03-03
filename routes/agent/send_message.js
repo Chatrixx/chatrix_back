@@ -101,9 +101,6 @@ router.post("/", async (req, res) => {
     };
 
     if (!customer) {
-      console.log("No customer found, craeting new user");
-      console.log(indicator);
-
       await user.create({
         full_name:
           req.body.contact_data.full_name ??
