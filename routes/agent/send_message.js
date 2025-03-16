@@ -1,15 +1,16 @@
 import express from "express";
 import OpenAI from "openai";
 import clinic from "../../db/models/clinic.js";
-import manychat from "../../db/models/manychat/manychat.js";
 import user from "../../db/models/user.js";
 import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
 import { getChannelIndicator } from "../../util/channel.js";
+import { extractTurkishPhoneNumber } from "../../util/phone.js";
 
 dotenv.config();
 
 const router = express.Router();
+// eslint-disable-next-line no-undef
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const createThread = async () => await openaiClient.beta.threads.create();
@@ -58,7 +59,6 @@ router.post("/", async (req, res) => {
   const indicator = getChannelIndicator(req.body.channel) ?? null;
   try {
     await dbConnect();
-    await manychat.create(req.body);
 
     const related_clinic = await clinic.findOne({
       clinic_id: req.body.clinic_id,
@@ -100,13 +100,15 @@ router.post("/", async (req, res) => {
       role: "agent",
     };
 
+    const userPhone = extractTurkishPhoneNumber(input);
+
     if (!customer) {
       await user.create({
         full_name:
           req.body.contact_data.full_name ??
           `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
         email: req.body.email,
-        phone: req.body.phone,
+        phone: req.body.phone ?? userPhone ?? null,
         clinic_id: req.body.clinic_id,
         profile_pic: req.body.contact_data.profile_pic,
         initial_channel: contact_channel,
@@ -116,7 +118,11 @@ router.post("/", async (req, res) => {
               [indicator]: req.body.contact_data?.[indicator],
               name: req.body.contact_data.full_name,
               profile_pic: req.body.contact_data.profile_pic,
+              phone: req.body.phone ?? userPhone ?? null,
             },
+            phone_giving_date: userPhone ? new Date() : null,
+            first_message_date: new Date(),
+            last_message_date: new Date(),
             thread_id: answer.thread_id,
             messages: [user_message, agent_message],
             last_updated: new Date(),
@@ -130,6 +136,15 @@ router.post("/", async (req, res) => {
           $set: {
             [`channels.${contact_channel}.thread_id`]: answer.thread_id,
             [`channels.${contact_channel}.last_updated`]: new Date(),
+            [`channels.${contact_channel}.last_message_date`]: new Date(),
+            ...(userPhone && {
+              phone: userPhone,
+              [`channels.${contact_channel}.profile_info.phone`]:
+                userPhone ?? null,
+              [`channels.${contact_channel}.phone_giving_date`]: userPhone
+                ? new Date()
+                : null,
+            }),
           },
           $push: {
             [`channels.${contact_channel}.messages`]: {
@@ -143,7 +158,7 @@ router.post("/", async (req, res) => {
     res.status(200).json({
       message: "Message created successfully",
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

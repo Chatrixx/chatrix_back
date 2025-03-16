@@ -1,17 +1,14 @@
 import express from "express";
-import dotenv from "dotenv";
 import dbConnect from "../../db/mongodb.js";
-import clinic from "../../db/models/clinic.js";
 import { getChannelIndicator } from "../../util/channel.js";
 import user from "../../db/models/user.js";
 
 const router = express.Router();
-dotenv.config();
 
 router.post("/", async (req, res) => {
   try {
     await dbConnect();
-  } catch (err) {
+  } catch {
     return res.status(500).json({ error: "Error connecting to database" });
   }
   const indicator = getChannelIndicator(req.body.channel) ?? null;
