@@ -15,9 +15,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongoose": "^8.11.0",
+    "mongoose": "^8.12.1",
     "nodemon": "^3.1.9",
-    "openai": "^4.86.1"
+    "openai": "^4.87.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

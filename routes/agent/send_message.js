@@ -12,7 +12,7 @@ import {
 } from "../../util/message.js";
 
 dotenv.config();
-
+const pendingResponses = new Map(); // Store messages before sending
 const router = express.Router();
 // eslint-disable-next-line no-undef
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -42,6 +42,7 @@ async function reply({ input, threadId, assistantId }) {
   if (!input)
     return { messages: ["Bana bir girdi sağlayınız.."], status: "failed" };
 
+
   let thread_id = threadId || (await createThread()).id;
   await createMessage({ thread_id, messageContent: input });
 
@@ -57,9 +58,30 @@ async function reply({ input, threadId, assistantId }) {
   return { messages, status: run.status, thread_id };
 }
 
+async function sendAggregatedResponse(indicator, assistantId) {
+  if (pendingResponses.has(indicator)) {
+    const { messages, threadId } = pendingResponses.get(indicator);
+    const finalMessage = messages.join(" ");
+    try {
+      const answer = await reply({ input: finalMessage, threadId, assistantId });
+
+      pendingResponses.delete(indicator);
+      console.log("Aggregated Message:", finalMessage);
+      console.log("OpenAI Answer:", answer.messages?.body?.data?.[0]?.content[0]?.text?.value);
+
+      return answer; // Return answer to be handled by the caller function
+    } catch (error) {
+      console.error("OpenAI Error:", error);
+      return { success: false, error: "Internal Server Error" }; // Return an error object
+    }
+  }
+  return { success: false, error: "No pending response found" }; // Return a default error response
+}
+
 router.post("/", async (req, res) => {
   if (!req.body.input)
     return res.status(400).json({ error: "Input is required" });
+
   const indicator = getChannelIndicator(req.body.channel) ?? null;
   try {
     await dbConnect();
@@ -73,106 +95,190 @@ router.post("/", async (req, res) => {
     const clinic_assistant_id = related_clinic?.openai_assistant?.assistant_id;
     if (!clinic_assistant_id)
       return res.status(404).json({ error: "Assistant not found" });
+
     if (!indicator) return res.status(400).json({ error: "Invalid channel" });
+
     const contact_channel = req.body.channel;
     const { input } = req.body;
 
     const customer = await user.findOne({
-      [`channels.${req.body.channel}.profile_info.${indicator}`]:
-        req.body.contact_data?.[indicator],
+      [`channels.${req.body.channel}.profile_info.${indicator}`]: req.body.contact_data?.[indicator],
       clinic_id: req.body.clinic_id,
     });
 
-    const modifiedInput = addLeadingNameToMessage(
-      input,
-      customer?.full_name ?? req.body.full_name
-    );
+    const modifiedInput = customer?.channels[contact_channel]?.thread_id ? input : addLeadingNameToMessage(input, customer?.full_name ?? req.body.full_name);
 
-    const answer = await reply({
-      input: modifiedInput,
-      threadId: customer ? customer.channels[contact_channel].thread_id : null,
-      assistantId: clinic_assistant_id,
-    });
+    if (pendingResponses.has(indicator)) {
+      const pending = pendingResponses.get(indicator);
+      pending.messages.push(modifiedInput);
+      clearTimeout(pending.timeout);
 
-    const user_message = {
-      content: input,
-      type: "text",
-      timestamp: new Date(),
-      fresh: true,
-      role: "user",
-    };
-
-    const agent_reply =
-      answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
-    const agent_message = {
-      content: removeEmojisAndExclamations(agent_reply),
-      type: "text",
-      timestamp: new Date(),
-      fresh: true,
-      role: "agent",
-    };
-
-    const userPhone = extractTurkishPhoneNumber(input);
-
-    if (!customer) {
-      await user.create({
-        full_name:
-          req.body.contact_data.full_name ??
-          `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
-        email: req.body.email,
-        phone: req.body.phone ?? userPhone ?? null,
-        clinic_id: req.body.clinic_id,
-        profile_pic: req.body.contact_data.profile_pic,
-        initial_channel: contact_channel,
-        channels: {
-          [contact_channel]: {
-            profile_info: {
-              [indicator]: req.body.contact_data?.[indicator],
-              name: req.body.contact_data.full_name,
-              profile_pic: req.body.contact_data.profile_pic,
-              phone: req.body.phone ?? userPhone ?? null,
-            },
-            phone_giving_date: userPhone ? new Date() : null,
-            first_message_date: new Date(),
-            last_message_date: new Date(),
-            thread_id: answer.thread_id,
-            messages: [user_message, agent_message],
-            last_updated: new Date(),
-          },
-        },
-      });
-    } else {
-      await user.updateOne(
-        { _id: customer._id },
-        {
-          $set: {
-            [`channels.${contact_channel}.thread_id`]: answer.thread_id,
-            [`channels.${contact_channel}.last_updated`]: new Date(),
-            [`channels.${contact_channel}.last_message_date`]: new Date(),
-            ...(userPhone && {
-              phone: userPhone,
-              [`channels.${contact_channel}.profile_info.phone`]:
-                userPhone ?? null,
-              [`channels.${contact_channel}.phone_giving_date`]: userPhone
-                ? new Date()
-                : null,
-            }),
-          },
-          $push: {
-            [`channels.${contact_channel}.messages`]: {
-              $each: [user_message, agent_message],
-            },
-          },
+      pending.timeout = setTimeout(async () => {
+        const answer = await sendAggregatedResponse(indicator, clinic_assistant_id);
+        if (answer?.error) {
+          console.error("Error from OpenAI:", answer.error);
+          return res.status(400).json({ error: answer.error });
         }
-      );
+
+        // Process answer inline (No helper function used)
+        const agent_reply = answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
+
+        const agent_message = {
+          content: removeEmojisAndExclamations(agent_reply),
+          type: "text",
+          timestamp: new Date(),
+          fresh: true,
+          role: "agent",
+        };
+
+        const user_message = {
+          content: modifiedInput,
+          type: "text",
+          timestamp: new Date(),
+          fresh: true,
+          role: "user",
+        };
+
+        const userPhone = extractTurkishPhoneNumber(modifiedInput);
+
+        if (!customer) {
+          await user.create({
+            full_name: req.body.contact_data.full_name ?? `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
+            email: req.body.email,
+            phone: req.body.phone ?? userPhone ?? null,
+            clinic_id: req.body.clinic_id,
+            profile_pic: req.body.contact_data.profile_pic,
+            initial_channel: contact_channel,
+            channels: {
+              [contact_channel]: {
+                profile_info: {
+                  [indicator]: req.body.contact_data?.[indicator],
+                  name: req.body.contact_data.full_name,
+                  profile_pic: req.body.contact_data.profile_pic,
+                  phone: req.body.phone ?? userPhone ?? null,
+                },
+                phone_giving_date: userPhone ? new Date() : null,
+                first_message_date: new Date(),
+                last_message_date: new Date(),
+                thread_id: answer.thread_id,
+                messages: [user_message, agent_message],
+                last_updated: new Date(),
+              },
+            },
+          });
+        } else {
+          await user.updateOne(
+            { _id: customer._id },
+            {
+              $set: {
+                [`channels.${contact_channel}.thread_id`]: answer.thread_id,
+                [`channels.${contact_channel}.last_updated`]: new Date(),
+                [`channels.${contact_channel}.last_message_date`]: new Date(),
+                ...(userPhone && {
+                  phone: userPhone,
+                  [`channels.${contact_channel}.profile_info.phone`]: userPhone ?? null,
+                  [`channels.${contact_channel}.phone_giving_date`]: userPhone ? new Date() : null,
+                }),
+              },
+              $push: {
+                [`channels.${contact_channel}.messages`]: {
+                  $each: [user_message, agent_message],
+                },
+              },
+            }
+          );
+        }
+
+        res.status(200).json({ message: "Message created successfully" });
+      }, 5500);
+    } else {
+      const messages = [modifiedInput];
+      const timeout = setTimeout(async () => {
+        const answer = await sendAggregatedResponse(indicator, clinic_assistant_id);
+        if (answer?.error) {
+          console.error("Error from OpenAI:", answer.error);
+          return res.status(400).json({ error: answer.error });
+        }
+
+        const agent_reply = answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
+        const agent_message = {
+          content: removeEmojisAndExclamations(agent_reply),
+          type: "text",
+          timestamp: new Date(),
+          fresh: true,
+          role: "agent",
+        };
+
+        const user_message = {
+          content: modifiedInput,
+          type: "text",
+          timestamp: new Date(),
+          fresh: true,
+          role: "user",
+        };
+
+        const userPhone = extractTurkishPhoneNumber(modifiedInput);
+
+        if (!customer) {
+          await user.create({
+            full_name: req.body.contact_data.full_name ?? `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
+            email: req.body.email,
+            phone: req.body.phone ?? userPhone ?? null,
+            clinic_id: req.body.clinic_id,
+            profile_pic: req.body.contact_data.profile_pic,
+            initial_channel: contact_channel,
+            channels: {
+              [contact_channel]: {
+                profile_info: {
+                  [indicator]: req.body.contact_data?.[indicator],
+                  name: req.body.contact_data.full_name,
+                  profile_pic: req.body.contact_data.profile_pic,
+                  phone: req.body.phone ?? userPhone ?? null,
+                },
+                phone_giving_date: userPhone ? new Date() : null,
+                first_message_date: new Date(),
+                last_message_date: new Date(),
+                thread_id: answer.thread_id,
+                messages: [user_message, agent_message],
+                last_updated: new Date(),
+              },
+            },
+          });
+        } else {
+          await user.updateOne(
+            { _id: customer._id },
+            {
+              $set: {
+                [`channels.${contact_channel}.thread_id`]: answer.thread_id,
+                [`channels.${contact_channel}.last_updated`]: new Date(),
+                [`channels.${contact_channel}.last_message_date`]: new Date(),
+                ...(userPhone && {
+                  phone: userPhone,
+                  [`channels.${contact_channel}.profile_info.phone`]: userPhone ?? null,
+                  [`channels.${contact_channel}.phone_giving_date`]: userPhone ? new Date() : null,
+                }),
+              },
+              $push: {
+                [`channels.${contact_channel}.messages`]: {
+                  $each: [user_message, agent_message],
+                },
+              },
+            }
+          );
+        }
+        
+        res.status(200).json({ message: "Message created successfully" });
+      }, 5500);
+      pendingResponses.set(indicator, { messages, timeout, threadId: customer?.channels[contact_channel]?.thread_id });
+      
     }
 
-    res.status(200).json({
-      message: "Message created successfully",
-    });
-  } catch {
+
+  } catch (error) {
+    console.error("Server Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 export default router;
