@@ -6,6 +6,10 @@ import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
 import { getChannelIndicator } from "../../util/channel.js";
 import { extractTurkishPhoneNumber } from "../../util/phone.js";
+import {
+  addLeadingNameToMessage,
+  removeEmojisAndExclamations,
+} from "../../util/message.js";
 
 dotenv.config();
 
@@ -79,8 +83,13 @@ router.post("/", async (req, res) => {
       clinic_id: req.body.clinic_id,
     });
 
-    const answer = await reply({
+    const modifiedInput = addLeadingNameToMessage(
       input,
+      customer?.full_name ?? req.body.full_name
+    );
+
+    const answer = await reply({
+      input: modifiedInput,
       threadId: customer ? customer.channels[contact_channel].thread_id : null,
       assistantId: clinic_assistant_id,
     });
@@ -92,8 +101,11 @@ router.post("/", async (req, res) => {
       fresh: true,
       role: "user",
     };
+
+    const agent_reply =
+      answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
     const agent_message = {
-      content: answer.messages?.body?.data?.[0]?.content[0]?.text?.value,
+      content: removeEmojisAndExclamations(agent_reply),
       type: "text",
       timestamp: new Date(),
       fresh: true,
