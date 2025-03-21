@@ -1,6 +1,6 @@
 import express from "express";
 import dbConnect from "../../db/mongodb.js";
-import { getChannelIndicator } from "../../util/channel.js";
+import { getChannelIndicator } from "../../utils/channel.js";
 import user from "../../db/models/user.js";
 
 const router = express.Router();

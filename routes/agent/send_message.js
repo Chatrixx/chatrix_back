@@ -4,12 +4,15 @@ import clinic from "../../db/models/clinic.js";
 import user from "../../db/models/user.js";
 import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
-import { getChannelIndicator } from "../../util/channel.js";
-import { extractTurkishPhoneNumber } from "../../util/phone.js";
+import { summarizeChat } from "../../utils/summarize_chat.js";
+import { sendToClients } from "../../utils/sse.js";
+
+import { getChannelIndicator } from "../../utils/channel.js";
+import { extractTurkishPhoneNumber } from "../../utils/phone.js";
 import {
   addLeadingNameToMessage,
   removeEmojisAndExclamations,
-} from "../../util/message.js";
+} from "../../utils/message.js";
 
 dotenv.config();
 const pendingResponses = new Map(); // Store messages before sending
@@ -66,8 +69,7 @@ async function sendAggregatedResponse(indicator, assistantId) {
       const answer = await reply({ input: finalMessage, threadId, assistantId });
 
       pendingResponses.delete(indicator);
-      console.log("Aggregated Message:", finalMessage);
-      console.log("OpenAI Answer:", answer.messages?.body?.data?.[0]?.content[0]?.text?.value);
+
 
       return answer; // Return answer to be handled by the caller function
     } catch (error) {
@@ -105,6 +107,32 @@ router.post("/", async (req, res) => {
       [`channels.${req.body.channel}.profile_info.${indicator}`]: req.body.contact_data?.[indicator],
       clinic_id: req.body.clinic_id,
     });
+const phoneNumber = extractTurkishPhoneNumber(input);
+const channelData = customer?.channels?.[contact_channel];
+const messages = channelData?.messages || [];
+
+if (phoneNumber && messages.length > 0) {
+  try {
+    const formatted = messages.map(msg => ({
+      sender: msg.role === "agent" ? "assistant" : "user",
+      text: msg.content
+    }));
+
+   const summary = await summarizeChat(formatted);
+
+    sendToClients({
+      type: "summary",
+      clinicId: req.body.clinic_id,
+      userId: customer._id,
+      phoneNumber
+    });
+
+  } catch (err) {
+    console.error("Özetleme sırasında hata:", err.message);
+  }
+}
+
+
 
     const modifiedInput = customer?.channels[contact_channel]?.thread_id ? input : addLeadingNameToMessage(input, customer?.full_name ?? req.body.full_name);
 

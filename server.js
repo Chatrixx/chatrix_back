@@ -6,6 +6,7 @@ import getChatsRoutes from "./routes/dashboard/chats/get-recent-chats.js";
 import createClinicRoutes from "./routes/dashboard/clinic/create.js";
 import getFreshMessagesRoutes from "./routes/agent/get_fresh_messages.js";
 import getAnalytics from "./routes/dashboard/analytics/get-analytics.js";
+import sseRoute from "./routes/sse/sse.js";
 
 dotenv.config();
 
@@ -21,5 +22,7 @@ app.use("/api/dashboard/get-recent-chats", getChatsRoutes);
 app.use("/api/clinic/create", createClinicRoutes);
 app.use("/api/agent/get_fresh_messages", getFreshMessagesRoutes);
 app.use("/api/dashboard/analytics", getAnalytics);
+app.use("/api/sse", sseRoute);
+
 
 app.listen(PORT, () => console.log(`🚀 Express running on port ${PORT}`));

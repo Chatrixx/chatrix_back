@@ -1,7 +1,7 @@
 import express from "express";
 import dbConnect from "../../../db/mongodb.js";
 import Clinic from "../../../db/models/clinic.js";
-import { formatBadRequest } from "../../../util/api.js";
+import { formatBadRequest } from "../../../utils/api.js";
 
 const router = express.Router();
 
