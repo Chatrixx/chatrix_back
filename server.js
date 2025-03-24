@@ -8,6 +8,11 @@ import getFreshMessagesRoutes from "./routes/agent/get_fresh_messages.js";
 import getAnalytics from "./routes/dashboard/analytics/get-analytics.js";
 import sseRoute from "./routes/sse/sse.js";
 import getNotifications from "./routes/dashboard/notifications/get-notifications.js";
+import patchMarkAllSeen from "./routes/dashboard/notifications/patch-notifications-mark-all-seen.js";
+import patchNotificationSeen from "./routes/dashboard/notifications/patch-notification-seen-by-id.js";
+import postNotification from "./routes/dashboard/notifications/post-notification.js";
+import getNotificationById from "./routes/dashboard/notifications/get-notification-by-id.js";
+
 
 dotenv.config();
 
@@ -25,5 +30,9 @@ app.use("/api/agent/get_fresh_messages", getFreshMessagesRoutes);
 app.use("/api/dashboard/analytics", getAnalytics);
 app.use("/api/sse", sseRoute);
 app.use("/api/notification/get-notifications", getNotifications);
+app.use("/dashboard/notifications", patchNotificationSeen);
+app.use("/dashboard/notifications", patchMarkAllSeen);
+app.use("/dashboard/notifications", postNotification);
+app.use("/dashboard/notifications", getNotificationById);
 
 app.listen(PORT, () => console.log(`🚀 Express running on port ${PORT}`));

@@ -6,7 +6,7 @@ import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
 import { summarizeChat } from "../../utils/summarize_chat.js";
 import { sendToClients } from "../../utils/sse.js";
-
+import Notification from "../../db/models/notification.js";
 import { getChannelIndicator } from "../../utils/channel.js";
 import { extractTurkishPhoneNumber } from "../../utils/phone.js";
 import {
@@ -127,6 +127,18 @@ if (phoneNumber && messages.length > 0) {
       phoneNumber
     });
 
+    await Notification.create({
+      title: "AI Özeti Üretildi",
+      type: "ai-summary",
+      date: new Date(),
+      body: {
+        summary,
+        phone: phoneNumber,
+        userId: customer._id,
+        clinicId: req.body.clinic_id,
+        channel: "instagram"
+      }
+    });
   } catch (err) {
     console.error("Özetleme sırasında hata:", err.message);
   }
