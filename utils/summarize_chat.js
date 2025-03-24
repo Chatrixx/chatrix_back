@@ -1,8 +1,10 @@
 import OpenAI from "openai";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const openai = new OpenAI({
-  apiKey:
-    "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",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function summarizeChat(messages) {
