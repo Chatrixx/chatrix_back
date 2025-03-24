@@ -21,10 +21,12 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p ${{ secrets.HOSTINGER_SSH_PORT }} -H ${{ secrets.HOSTINGER_SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 🚀 SSH Deploy via Docker
+      - name: 🚀 SSH Deploy via Docker (with ENTER bypass)
         run: |
-          ssh -p ${{ secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} << 'EOF'
-            cd /root/chatrix_back
+          ssh -tt -p ${{ secrets.HOSTINGER_SSH_PORT }} ${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }} << 'EOF'
+            echo ""  # Simulate pressing ENTER
+            sleep 3  # Wait for the prompt to go away
+            cd /path/to/your/app
             git pull origin main
             docker compose down
             docker compose up -d --build
