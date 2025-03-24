@@ -1,5 +1,4 @@
 import express from "express";
-import notification from "../../../db/models/notification.js";
 import dbConnect from "../../../db/mongodb.js";
 import clinic from "../../../db/models/clinic.js";
 const router = express.Router();
@@ -17,7 +16,7 @@ router.get("/", async (req, res) => {
         .status(400)
         .json({ success: false, error: "clinic_id is required" });
     }
-    const notifications = await notification.find({ clinic_id });
+    const notifications = clinic_res?.notifications;
 
     res.status(200).json({ success: true, data: notifications });
   } catch (error) {

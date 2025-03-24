@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const ClinicShema = new mongoose.Schema({
-  id: {
+  clinic_id: {
     type: String,
     required: true,
   },
@@ -41,7 +41,7 @@ const ClinicShema = new mongoose.Schema({
     type: Array,
   },
   notifications: {
-    type: Array,
+    type: mongoose.Schema.Types.Mixed,
   },
 });
 

@@ -7,7 +7,9 @@ router.post("/", async (req, res) => {
     const { title, type, body } = req.body;
 
     if (!title || !type || !body) {
-      return res.status(400).json({ error: "title, type and body are required" });
+      return res
+        .status(400)
+        .json({ error: "title, type and body are required" });
     }
 
     const notification = new Notification({

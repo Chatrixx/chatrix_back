@@ -5,7 +5,7 @@ import Notification from "../../../db/models/notification.js";
 router.patch("/mark-all-seen", async (req, res) => {
   try {
     const result = await Notification.updateMany(
-      { seen: false },   // Sadece görülmemiş olanları güncelle
+      { seen: false }, // Sadece görülmemiş olanları güncelle
       { $set: { seen: true } }
     );
 

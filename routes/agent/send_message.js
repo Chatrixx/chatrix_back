@@ -6,7 +6,6 @@ import dbConnect from "../../db/mongodb.js";
 import dotenv from "dotenv";
 import { summarizeChat } from "../../utils/summarize_chat.js";
 import { sendToClients } from "../../utils/sse.js";
-import Notification from "../../db/models/notification.js";
 import { getChannelIndicator } from "../../utils/channel.js";
 import { extractTurkishPhoneNumber } from "../../utils/phone.js";
 import {
@@ -45,7 +44,6 @@ async function reply({ input, threadId, assistantId }) {
   if (!input)
     return { messages: ["Bana bir girdi sağlayınız.."], status: "failed" };
 
-
   let thread_id = threadId || (await createThread()).id;
   await createMessage({ thread_id, messageContent: input });
 
@@ -66,10 +64,13 @@ async function sendAggregatedResponse(indicator, assistantId) {
     const { messages, threadId } = pendingResponses.get(indicator);
     const finalMessage = messages.join(" ");
     try {
-      const answer = await reply({ input: finalMessage, threadId, assistantId });
+      const answer = await reply({
+        input: finalMessage,
+        threadId,
+        assistantId,
+      });
 
       pendingResponses.delete(indicator);
-
 
       return answer; // Return answer to be handled by the caller function
     } catch (error) {
@@ -104,49 +105,61 @@ router.post("/", async (req, res) => {
     const { input } = req.body;
 
     const customer = await user.findOne({
-      [`channels.${req.body.channel}.profile_info.${indicator}`]: req.body.contact_data?.[indicator],
+      [`channels.${req.body.channel}.profile_info.${indicator}`]:
+        req.body.contact_data?.[indicator],
       clinic_id: req.body.clinic_id,
     });
-const phoneNumber = extractTurkishPhoneNumber(input);
-const channelData = customer?.channels?.[contact_channel];
-const messages = channelData?.messages || [];
+    const phoneNumber = extractTurkishPhoneNumber(input);
+    const channelData = customer?.channels?.[contact_channel];
+    const messages = channelData?.messages || [];
 
-if (phoneNumber && messages.length > 0) {
-  try {
-    const formatted = messages.map(msg => ({
-      sender: msg.role === "agent" ? "assistant" : "user",
-      text: msg.content
-    }));
+    if (phoneNumber && messages.length > 0) {
+      try {
+        const formatted = messages.map((msg) => ({
+          sender: msg.role === "agent" ? "assistant" : "user",
+          text: msg.content,
+        }));
 
-   const summary = await summarizeChat(formatted);
+        const summary = await summarizeChat(formatted);
 
-    sendToClients({
-      type: "summary",
-      clinicId: req.body.clinic_id,
-      userId: customer._id,
-      phoneNumber
-    });
-
-    await Notification.create({
-      title: "AI Özeti Üretildi",
-      type: "ai-summary",
-      date: new Date(),
-      body: {
-        summary,
-        phone: phoneNumber,
-        userId: customer._id,
-        clinicId: req.body.clinic_id,
-        channel: "instagram"
+        const newNotification = {
+          title: "AI Özeti Üretildi",
+          type: "ai-summary",
+          date: new Date(),
+          body: {
+            summary,
+            phone: phoneNumber,
+            userId: customer._id,
+            clinic_id: req.body.clinic_id,
+            channel: "instagram",
+          },
+        };
+        // TODO: Remove later
+        const mock_clinic_id = "yasinakgul_bakirkoy";
+        await clinic.findOneAndUpdate(
+          { clinic_id: mock_clinic_id },
+          {
+            $push: { notifications: newNotification }, // Push new notification
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+        sendToClients({
+          type: "summary",
+          clinicId: req.body.clinic_id,
+          userId: customer._id,
+          phoneNumber,
+        });
+      } catch (err) {
+        console.error("Özetleme sırasında hata:", err.message);
       }
-    });
-  } catch (err) {
-    console.error("Özetleme sırasında hata:", err.message);
-  }
-}
+    }
 
-
-
-    const modifiedInput = customer?.channels[contact_channel]?.thread_id ? input : addLeadingNameToMessage(input, customer?.full_name ?? req.body.full_name);
+    const modifiedInput = customer?.channels[contact_channel]?.thread_id
+      ? input
+      : addLeadingNameToMessage(
+          input,
+          customer?.full_name ?? req.body.full_name
+        );
 
     if (pendingResponses.has(indicator)) {
       const pending = pendingResponses.get(indicator);
@@ -154,14 +167,18 @@ if (phoneNumber && messages.length > 0) {
       clearTimeout(pending.timeout);
 
       pending.timeout = setTimeout(async () => {
-        const answer = await sendAggregatedResponse(indicator, clinic_assistant_id);
+        const answer = await sendAggregatedResponse(
+          indicator,
+          clinic_assistant_id
+        );
         if (answer?.error) {
           console.error("Error from OpenAI:", answer.error);
           return res.status(400).json({ error: answer.error });
         }
 
         // Process answer inline (No helper function used)
-        const agent_reply = answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
+        const agent_reply =
+          answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
 
         const agent_message = {
           content: removeEmojisAndExclamations(agent_reply),
@@ -183,7 +200,9 @@ if (phoneNumber && messages.length > 0) {
 
         if (!customer) {
           await user.create({
-            full_name: req.body.contact_data.full_name ?? `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
+            full_name:
+              req.body.contact_data.full_name ??
+              `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
             email: req.body.email,
             phone: req.body.phone ?? userPhone ?? null,
             clinic_id: req.body.clinic_id,
@@ -216,8 +235,11 @@ if (phoneNumber && messages.length > 0) {
                 [`channels.${contact_channel}.last_message_date`]: new Date(),
                 ...(userPhone && {
                   phone: userPhone,
-                  [`channels.${contact_channel}.profile_info.phone`]: userPhone ?? null,
-                  [`channels.${contact_channel}.phone_giving_date`]: userPhone ? new Date() : null,
+                  [`channels.${contact_channel}.profile_info.phone`]:
+                    userPhone ?? null,
+                  [`channels.${contact_channel}.phone_giving_date`]: userPhone
+                    ? new Date()
+                    : null,
                 }),
               },
               $push: {
@@ -234,13 +256,17 @@ if (phoneNumber && messages.length > 0) {
     } else {
       const messages = [modifiedInput];
       const timeout = setTimeout(async () => {
-        const answer = await sendAggregatedResponse(indicator, clinic_assistant_id);
+        const answer = await sendAggregatedResponse(
+          indicator,
+          clinic_assistant_id
+        );
         if (answer?.error) {
           console.error("Error from OpenAI:", answer.error);
           return res.status(400).json({ error: answer.error });
         }
 
-        const agent_reply = answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
+        const agent_reply =
+          answer.messages?.body?.data?.[0]?.content[0]?.text?.value;
         const agent_message = {
           content: removeEmojisAndExclamations(agent_reply),
           type: "text",
@@ -258,10 +284,13 @@ if (phoneNumber && messages.length > 0) {
         };
 
         const userPhone = extractTurkishPhoneNumber(modifiedInput);
+        console.log("userPhone:", userPhone);
 
         if (!customer) {
           await user.create({
-            full_name: req.body.contact_data.full_name ?? `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
+            full_name:
+              req.body.contact_data.full_name ??
+              `${req.body.contact_data.first_name} ${req.body.contact_data.last_name}`,
             email: req.body.email,
             phone: req.body.phone ?? userPhone ?? null,
             clinic_id: req.body.clinic_id,
@@ -294,8 +323,11 @@ if (phoneNumber && messages.length > 0) {
                 [`channels.${contact_channel}.last_message_date`]: new Date(),
                 ...(userPhone && {
                   phone: userPhone,
-                  [`channels.${contact_channel}.profile_info.phone`]: userPhone ?? null,
-                  [`channels.${contact_channel}.phone_giving_date`]: userPhone ? new Date() : null,
+                  [`channels.${contact_channel}.profile_info.phone`]:
+                    userPhone ?? null,
+                  [`channels.${contact_channel}.phone_giving_date`]: userPhone
+                    ? new Date()
+                    : null,
                 }),
               },
               $push: {
@@ -306,19 +338,19 @@ if (phoneNumber && messages.length > 0) {
             }
           );
         }
-        
+
         res.status(200).json({ message: "Message created successfully" });
       }, 5500);
-      pendingResponses.set(indicator, { messages, timeout, threadId: customer?.channels[contact_channel]?.thread_id });
-      
+      pendingResponses.set(indicator, {
+        messages,
+        timeout,
+        threadId: customer?.channels[contact_channel]?.thread_id,
+      });
     }
-
-
   } catch (error) {
     console.error("Server Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 export default router;
