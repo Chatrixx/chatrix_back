@@ -40,6 +40,9 @@ const ClinicShema = new mongoose.Schema({
   treatments: {
     type: Array,
   },
+  notifications: {
+    type: Array,
+  },
 });
 
 export default mongoose.models.Clinic || mongoose.model("Clinic", ClinicShema);
