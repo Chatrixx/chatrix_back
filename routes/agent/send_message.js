@@ -284,7 +284,6 @@ router.post("/", async (req, res) => {
         };
 
         const userPhone = extractTurkishPhoneNumber(modifiedInput);
-        console.log("userPhone:", userPhone);
 
         if (!customer) {
           await user.create({
