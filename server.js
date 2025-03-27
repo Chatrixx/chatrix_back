@@ -1,18 +1,15 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import sendMessageRoutes from "./routes/agent/send_message.js";
-import getChatsRoutes from "./routes/dashboard/chats/get-recent-chats.js";
-import createClinicRoutes from "./routes/dashboard/clinic/create.js";
-import getFreshMessagesRoutes from "./routes/agent/get_fresh_messages.js";
-import getAnalytics from "./routes/dashboard/analytics/get-analytics.js";
-import sseRoute from "./routes/sse/sse.js";
-import getNotifications from "./routes/dashboard/notifications/get-notifications.js";
-import patchMarkAllSeen from "./routes/dashboard/notifications/patch-notifications-mark-all-seen.js";
-import patchNotificationSeen from "./routes/dashboard/notifications/patch-notification-seen-by-id.js";
-import postNotification from "./routes/dashboard/notifications/post-notification.js";
-import getNotificationById from "./routes/dashboard/notifications/get-notification-by-id.js";
+import dbConnect from "./db/mongodb.js";
+import notFoundHandler from "./middleware/notFound.middleware.js";
+import errorHandler from "./middleware/error.middleware.js";
+import auth from "./middleware/auth.middleware.js";
 
+import agentRoutes from "./routes/agent.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
+import chatsRoutes from "./routes/chats.routes.js";
+import notificationRoutes from "./routes/notifications.routes.js";
 
 dotenv.config();
 
@@ -20,19 +17,21 @@ const app = express();
 // eslint-disable-next-line no-undef
 const PORT = process.env.PORT || 8080;
 
+dbConnect().then(() => console.log("Connected to DB ✅"));
+
 app.use(express.json());
 app.use(cors());
 
-app.use("/api/agent/send_message", sendMessageRoutes);
-app.use("/api/dashboard/get-recent-chats", getChatsRoutes);
-app.use("/api/clinic/create", createClinicRoutes);
-app.use("/api/agent/get_fresh_messages", getFreshMessagesRoutes);
-app.use("/api/dashboard/analytics", getAnalytics);
-app.use("/api/sse", sseRoute);
-app.use("/api/notification/get-notifications", getNotifications);
-app.use("/dashboard/notifications", patchNotificationSeen);
-app.use("/dashboard/notifications", patchMarkAllSeen);
-app.use("/dashboard/notifications", postNotification);
-app.use("/dashboard/notifications", getNotificationById);
+app.use("/api/agent/", agentRoutes);
+
+app.use("/api/analytics/", auth, analyticsRoutes);
+
+app.use("/api/chats/", auth, chatsRoutes);
+
+app.use("/api/notifications/", auth, notificationRoutes);
+
+app.use(notFoundHandler);
+
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`🚀 Express running on port ${PORT}`));

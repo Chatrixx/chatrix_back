@@ -38,12 +38,18 @@ const PortfolioSchema = new mongoose.Schema({
   treatments: [TreatmentSchema],
 });
 
+/**
+ * @type {mongoose.SchemaDefinitionProperty}
+ */
 const UserSchema = new mongoose.Schema({
   full_name: String,
   email: String,
   phone: String,
   profile_pic: String,
-  clinic_id: String,
+  clinic_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Clinic",
+  },
   medicasimple: mongoose.Schema.Types.Mixed,
   initial_channel: String,
   channels: ChannelsSchema,

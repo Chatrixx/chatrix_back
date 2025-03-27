@@ -1,17 +1,22 @@
 import express from "express";
 import OpenAI from "openai";
-import clinic from "../../db/models/clinic.js";
-import user from "../../db/models/user.js";
-import dbConnect from "../../db/mongodb.js";
+import clinic from "../db/models/Clinic.js";
+import user from "../db/models/User.js";
 import dotenv from "dotenv";
-import { summarizeChat } from "../../utils/summarize_chat.js";
-import { sendToClients } from "../../utils/sse.js";
-import { getChannelIndicator } from "../../utils/channel.js";
-import { extractTurkishPhoneNumber } from "../../utils/phone.js";
+import { summarizeChat } from "../utils/summarize_chat.js";
+import { getChannelIndicator } from "../utils/channel.js";
+import { extractTurkishPhoneNumber } from "../utils/phone.js";
 import {
   addLeadingNameToMessage,
   removeEmojisAndExclamations,
-} from "../../utils/message.js";
+} from "../utils/message.js";
+
+let clients = [];
+function sendToClients(data) {
+  clients.forEach((client) => {
+    client.write(`data: ${JSON.stringify(data)}\n\n`);
+  });
+}
 
 dotenv.config();
 const pendingResponses = new Map(); // Store messages before sending
@@ -81,14 +86,12 @@ async function sendAggregatedResponse(indicator, assistantId) {
   return { success: false, error: "No pending response found" }; // Return a default error response
 }
 
-router.post("/", async (req, res) => {
+router.post("/send_message", async (req, res) => {
   if (!req.body.input)
     return res.status(400).json({ error: "Input is required" });
 
   const indicator = getChannelIndicator(req.body.channel) ?? null;
   try {
-    await dbConnect();
-
     const related_clinic = await clinic.findOne({
       clinic_id: req.body.clinic_id,
     });
@@ -350,6 +353,71 @@ router.post("/", async (req, res) => {
     console.error("Server Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+});
+
+router.post("/get_fresh_messages", async (req, res) => {
+  const indicator = getChannelIndicator(req.body.channel) ?? null;
+  try {
+    if (!req.body.clinic_id)
+      return res.status(400).json({ error: "clinic_id is required" });
+
+    if (!req.body.channel)
+      return res.status(400).json({ error: "channel is required" });
+
+    if (!indicator) return res.status(400).json({ error: "Invalid channel" });
+    if (!req.body.contact_data?.[indicator])
+      return res.status(400).json({ error: `${indicator} is required` });
+  } catch (err) {
+    const error = err.message ?? err;
+    return res.status(400).json({ error });
+  }
+
+  const customer = await user.findOne({
+    clinic_id: req.body.clinic_id,
+    [`channels.${req.body.channel}.profile_info.${indicator}`]:
+      req.body.contact_data?.[indicator],
+  });
+
+  if (!customer) return res.status(404).json({ error: "Customer not found" });
+  const messages = customer.channels[req.body.channel].messages;
+  const fresh_messages = messages.filter(
+    (message) => message.fresh && message.role === "agent"
+  );
+  if (fresh_messages.length === 0)
+    return res.status(404).json({ error: "No fresh messages" });
+
+  await user.updateOne(
+    {
+      clinic_id: req.body.clinic_id,
+      [`channels.${req.body.channel}.profile_info.${indicator}`]:
+        req.body.contact_data?.[indicator],
+    },
+    {
+      $set: {
+        [`channels.${req.body.channel}.messages.$[elem].fresh`]: false,
+      },
+    },
+    {
+      arrayFilters: [
+        {
+          "elem.fresh": true,
+        },
+      ],
+    }
+  );
+  return res.status(200).json({
+    version: "v2",
+    content: {
+      type: req.body.channel,
+      messages: fresh_messages.map((message) => ({
+        type: message.type,
+        text: message.content,
+      })),
+
+      actions: [],
+      quick_replies: [],
+    },
+  });
 });
 
 export default router;

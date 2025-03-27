@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+/**
+ * @type {mongoose.SchemaDefinitionProperty}
+ */
 const NotificationSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -21,6 +24,7 @@ const NotificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  clinic_id: { type: mongoose.Schema.Types.ObjectId, ref: "Clinic" },
 });
 
 export default mongoose.models.Notification ||

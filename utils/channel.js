@@ -1,4 +1,4 @@
-import { CHANNELS } from "../enum/channels.js";
+import { CHANNELS } from "../constants/channels.js";
 
 export const getChannelIndicator = (channel) => {
   if (!channel) throw new Error("Channel is required");
@@ -7,5 +7,5 @@ export const getChannelIndicator = (channel) => {
     throw new Error("Invalid channel");
 
   if (channel === CHANNELS.INSTAGRAM) return "ig_username";
-  if (channel === CHANNELS.WHATSAPP) return "phone"; // TODO: This is temp
+  if (channel === CHANNELS.WHATSAPP) return "phone";
 };

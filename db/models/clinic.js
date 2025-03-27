@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+/**
+ * @type {mongoose.SchemaDefinitionProperty}
+ */
 const ClinicShema = new mongoose.Schema({
   clinic_id: {
     type: String,
@@ -39,9 +42,6 @@ const ClinicShema = new mongoose.Schema({
   },
   treatments: {
     type: Array,
-  },
-  notifications: {
-    type: mongoose.Schema.Types.Mixed,
   },
 });
 

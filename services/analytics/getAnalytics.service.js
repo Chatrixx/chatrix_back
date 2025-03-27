@@ -1,11 +1,7 @@
-import express from "express";
-import user from "../../../db/models/user.js";
-import { CHANNELS } from "../../../enum/channels.js";
-import dbConnect from "../../../db/mongodb.js";
-
-const router = express.Router();
-
-const getAnalytics = async (
+import user from "../../db/models/User.js";
+import { CHANNELS } from "../../constants/channels.js";
+const getAnalyticsFromDB = async (
+  clinic_id,
   startDate,
   endDate,
   channel = CHANNELS.INSTAGRAM,
@@ -15,8 +11,6 @@ const getAnalytics = async (
   const end = new Date(endDate);
 
   try {
-    await dbConnect();
-
     // Define the date group format (day or month)
     const dateFormat =
       groupBy === "month"
@@ -36,6 +30,7 @@ const getAnalytics = async (
     const analyticsPipeline = [
       {
         $match: {
+          clinic_id, // Ensure only users from the given clinic are included
           [`channels.${channel}.first_message_date`]: {
             $gte: start,
             $lte: end,
@@ -95,37 +90,38 @@ const getAnalytics = async (
   }
 };
 
-router.get("/", async (req, res) => {
-  try {
-    const analytics = await getAnalytics(
-      req.query.startDate,
-      req.query.endDate,
-      req.query.channel ?? CHANNELS.INSTAGRAM,
-      req.query.groupBy ?? "day"
-    );
-
-    const total_messengers = analytics.reduce(
-      (acc, curr) => acc + curr.totalMessengers,
-      0
-    );
-    const total_phone_numbers_given = analytics.reduce(
-      (acc, curr) => acc + curr.totalPhoneNumbersGiven,
-      0
-    );
-
-    res.status(200).json({
-      success: true,
-      data: {
-        data_series: analytics,
-        total_messengers,
-        total_phone_numbers_given,
-        total_phone_ratio:
-          (total_phone_numbers_given / total_messengers).toFixed(2) * 1,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error });
+export default async function getAnalytics({
+  clinic_id,
+  startDate,
+  endDate,
+  channel,
+  groupBy,
+}) {
+  if (!clinic_id) {
+    throw new Error("clinic_id is required");
   }
-});
+  const analytics = await getAnalyticsFromDB(
+    clinic_id,
+    startDate,
+    endDate,
+    channel ?? CHANNELS.INSTAGRAM,
+    groupBy ?? "day"
+  );
 
-export default router;
+  const total_messengers = analytics.reduce(
+    (acc, curr) => acc + curr.totalMessengers,
+    0
+  );
+  const total_phone_numbers_given = analytics.reduce(
+    (acc, curr) => acc + curr.totalPhoneNumbersGiven,
+    0
+  );
+
+  return {
+    data_series: analytics,
+    total_messengers,
+    total_phone_numbers_given,
+    total_phone_ratio:
+      (total_phone_numbers_given / total_messengers).toFixed(2) * 1,
+  };
+}
