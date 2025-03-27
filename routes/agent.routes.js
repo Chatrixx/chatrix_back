@@ -92,9 +92,7 @@ router.post("/send_message", async (req, res) => {
 
   const indicator = getChannelIndicator(req.body.channel) ?? null;
   try {
-    const related_clinic = await clinic.findOne({
-      clinic_id: req.body.clinic_id,
-    });
+    const related_clinic = await clinic.findById(req.body.clinic_id);
     if (!related_clinic)
       return res.status(404).json({ error: "Clinic not found" });
 
