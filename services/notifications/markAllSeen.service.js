@@ -1,4 +1,4 @@
-import Notification from "../../db/models/Notification.js";
+import Notification from "../../db/models/notification.js";
 export default async function markAllSeen({ clinic_id }) {
   try {
     const result = await Notification.updateMany(

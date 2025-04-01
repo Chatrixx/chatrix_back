@@ -1,5 +1,5 @@
 import { CHANNELS } from "../../constants/channels.js";
-import User from "../../db/models/User.js";
+import User from "../../db/models/user.js";
 
 export default async function getChatsByUser({ user_id, channel }) {
   try {
