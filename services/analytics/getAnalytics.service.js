@@ -1,5 +1,6 @@
 import user from "../../db/models/user.js";
 import { CHANNELS } from "../../constants/channels.js";
+
 const getAnalyticsFromDB = async (
   clinic_id,
   startDate,
