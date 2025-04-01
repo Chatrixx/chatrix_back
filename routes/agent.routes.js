@@ -1,6 +1,6 @@
 import express from "express";
 import OpenAI from "openai";
-import clinic from "../db/models/Clinic.js";
+import clinic from "../db/models/clinic.js";
 import user from "../db/models/User.js";
 import dotenv from "dotenv";
 import { summarizeChat } from "../utils/summarize_chat.js";
