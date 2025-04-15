@@ -4,10 +4,6 @@ import bcrypt from "bcrypt";
  * @type {mongoose.SchemaDefinitionProperty}
  */
 const ClinicShema = new mongoose.Schema({
-  clinic_id: {
-    type: String,
-    required: true,
-  },
   brand_id: {
     type: String,
     required: true,
