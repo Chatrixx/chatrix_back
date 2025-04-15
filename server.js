@@ -7,6 +7,7 @@ import errorHandler from "./middleware/error.middleware.js";
 import auth from "./middleware/auth.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 import agentRoutes from "./routes/agent.routes.js";
+import assistantRoutes from "./routes/assistant.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import chatsRoutes from "./routes/chats.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
@@ -23,7 +24,10 @@ dbConnect().then(() => console.log("Connected to DB ✅"));
 app.use(express.json());
 app.use(cors());
 app.use("/api/auth", authRoutes);
+
 app.use("/api/agent/", agentRoutes);
+
+app.use("/api/assistant/", assistantRoutes);
 
 app.use("/api/analytics/", auth, analyticsRoutes);
 
