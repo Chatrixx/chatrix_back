@@ -12,7 +12,7 @@ async function GetAllChats(req, res, next) {
 async function GetUserChatsByChannel(req, res, next) {
   try {
     const user = await ChatsService.getByUser({
-      user_id: req.params?.user_id,
+      user_id: req?.user?.id,
       channel: req.params.channel,
     });
     if (user.clinic_id !== req.user?._id) {

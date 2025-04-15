@@ -1,6 +1,10 @@
-import User from "../../db/models/user.js";
+import User from "../../db/models/User.js";
 
 export default async function getAllChats({ clinic_id }) {
+  console.log("====================================");
+  console.log("getAllChats");
+  console.log("clinic_id", clinic_id);
+  console.log("====================================");
   try {
     const users = await User.find({ clinic_id }).select("full_name channels");
     const usersWithChats = users.map((user) => {
