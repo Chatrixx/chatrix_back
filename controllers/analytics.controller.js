@@ -1,8 +1,6 @@
 import AnalyticsService from "../services/analytics/index.js";
 
 async function GetAnalytics(req, res, next) {
-  console.log(req);
-
   try {
     res.json(
       await AnalyticsService.getAnalytics({
