@@ -1,16 +1,23 @@
-export default async function auth(req, res, next) {
-  try {
-    // TODO: Implement Logic
-    req.user = {
-      _id: "67b95627085cebf763d2a806",
-      role: "admin",
-      name: "yasinakgul_bakirkoy",
-      openai_assistant: {
-        assistant_id: "asst_GY55jnlwDLWxKJUJJcS3musx",
-      },
-    };
-    next();
-  } catch {
-    res.status(401).send({ error: "Unauthorized" });
+import jwt from "jsonwebtoken";
+
+const auth = (req, res, next) => {
+  const authHeader = req.header("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
   }
-}
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // { userId: ... }
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Invalid or expired token." });
+  }
+};
+
+export default auth;
