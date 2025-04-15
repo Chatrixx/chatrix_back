@@ -1,4 +1,4 @@
-import user from "../../db/models/user.js";
+import user from "../../db/models/User.js";
 import { getChannelIndicator } from "../../utils/channel.js";
 
 export default async function getFreshMessages(body) {

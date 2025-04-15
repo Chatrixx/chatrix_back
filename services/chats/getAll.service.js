@@ -1,4 +1,4 @@
-import User from "../../db/models/user.js";
+import User from "../../db/models/User.js";
 
 export default async function getAllChats({ clinic_id }) {
   try {
