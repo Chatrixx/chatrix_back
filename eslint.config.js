@@ -4,7 +4,11 @@ import eslintPluginImport from "eslint-plugin-import";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-  { languageOptions: { globals: globals.browser } },
+  {
+    languageOptions: {
+      globals: { ...globals.browser, process: "readonly", global: "readonly" },
+    },
+  },
   pluginJs.configs.recommended,
   {
     plugins: {

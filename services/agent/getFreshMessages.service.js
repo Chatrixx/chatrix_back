@@ -1,10 +1,10 @@
 import user from "../../db/models/User.js";
 import { getChannelIndicator } from "../../utils/channel.js";
 
-export default async function getFreshMessages(body) {
+export default async function getFreshMessages(body, clinic_id) {
   const indicator = getChannelIndicator(body.channel) ?? null;
 
-  if (!body.clinic_id) {
+  if (!clinic_id) {
     return { status: 400, data: { error: "clinic_id is required" } };
   }
 
@@ -24,7 +24,7 @@ export default async function getFreshMessages(body) {
   }
 
   const customer = await user.findOne({
-    clinic_id: body.clinic_id,
+    clinic_id,
     [`channels.${body.channel}.profile_info.${indicator}`]:
       body.contact_data?.[indicator],
   });
@@ -44,7 +44,7 @@ export default async function getFreshMessages(body) {
 
   await user.updateOne(
     {
-      clinic_id: body.clinic_id,
+      clinic_id,
       [`channels.${body.channel}.profile_info.${indicator}`]:
         body.contact_data?.[indicator],
     },

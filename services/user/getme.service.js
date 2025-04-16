@@ -13,7 +13,7 @@ export default async function getMe(userId) {
       email: user.email,
       logo: user.logo,
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }

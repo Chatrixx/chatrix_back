@@ -1,4 +1,6 @@
 import clinic from "../../db/models/clinic.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export default async function signup({ email, password }) {
   try {
@@ -9,7 +11,7 @@ export default async function signup({ email, password }) {
     const user = new clinic({ email, password: hashedPassword });
     await user.save();
 
-    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
     return token;

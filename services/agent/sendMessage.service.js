@@ -127,9 +127,9 @@ export default async function sendMessage(body, clinic_id) {
       const summary = await summarizeChat(formatted);
 
       const newNotification = {
-        title: "AI Özeti Üretildi",
         type: "ai-summary",
         date: new Date(),
+        clinic_id: clinic_id,
         body: {
           summary,
           phone: phoneNumber,

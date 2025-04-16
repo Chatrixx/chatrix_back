@@ -23,7 +23,6 @@ export default async function getInstructions(body) {
 
   const assistant_id = clinic.openai_assistant.assistant_id;
 
-
   if (clinic.openai_assistant.instructions) {
     return {
       status: 200,
@@ -35,11 +34,9 @@ export default async function getInstructions(body) {
     };
   }
 
-
   try {
     const assistant = await openai.beta.assistants.retrieve(assistant_id);
     const fetchedInstructions = assistant.instructions;
-
 
     clinic.openai_assistant = {
       ...clinic.openai_assistant,

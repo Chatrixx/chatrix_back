@@ -1,4 +1,4 @@
-import Notification from "../../db/models/notification.js";
+import Notification from "../../db/models/Notification.js";
 export default async function markSeenById({ notification_id }) {
   try {
     const notification = await Notification.findByIdAndUpdate(

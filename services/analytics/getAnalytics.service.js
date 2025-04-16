@@ -1,5 +1,6 @@
 import user from "../../db/models/User.js";
 import { CHANNELS } from "../../constants/channels.js";
+import mongoose from "mongoose";
 
 const getAnalyticsFromDB = async (
   clinic_id,
@@ -31,7 +32,7 @@ const getAnalyticsFromDB = async (
     const analyticsPipeline = [
       {
         $match: {
-          clinic_id, // Ensure only users from the given clinic are included
+          clinic_id: new mongoose.Types.ObjectId(clinic_id),
           [`channels.${channel}.first_message_date`]: {
             $gte: start,
             $lte: end,
@@ -101,6 +102,7 @@ export default async function getAnalytics({
   if (!clinic_id) {
     throw new Error("clinic_id is required");
   }
+
   const analytics = await getAnalyticsFromDB(
     clinic_id,
     startDate,
