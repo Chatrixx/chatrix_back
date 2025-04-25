@@ -1,20 +1,16 @@
 import AnalyticsService from "../services/analytics/index.js";
+import { catchAsync } from "../utils/api/catchAsync.js";
 
-async function GetAnalytics(req, res, next) {
-  try {
-    res.json(
-      await AnalyticsService.getAnalytics({
-        clinic_id: req.user?.userId,
-        channel: req.query?.channel,
-        groupBy: req.query?.groupBy,
-        startDate: req.query?.startDate,
-        endDate: req.query?.endDate,
-      })
-    );
-  } catch (error) {
-    next(error);
-  }
-}
+const GetAnalytics = catchAsync(async (req, res) => {
+  const analytics = await AnalyticsService.getAnalytics({
+    clinic_id: req.user?.userId,
+    channel: req.query?.channel,
+    groupBy: req.query?.groupBy,
+    startDate: req.query?.startDate,
+    endDate: req.query?.endDate,
+  });
+  res.json(analytics);
+});
 
 const AnalyticsController = {
   GetAnalytics,

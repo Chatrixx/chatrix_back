@@ -1,14 +1,11 @@
-export default function errorHandler(err, req, res) {
-  console.error(err.stack);
-
+// eslint-disable-next-line no-unused-vars
+export default function errorHandler(err, req, res, next) {
   const statusCode = err.statusCode || 500;
-  const message = err.message || "Something went wrong!";
-
+  const errMessage = err.message || "Something went wrong..";
   res.status(statusCode).json({
     success: false,
     status: statusCode,
-    message: message,
-    // eslint-disable-next-line no-undef
+    message: errMessage,
     stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
   });
 }

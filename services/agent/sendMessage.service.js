@@ -22,25 +22,19 @@ async function sendAggregatedResponse(indicator, assistantId) {
   if (pendingResponses.has(indicator)) {
     const { messages, threadId } = pendingResponses.get(indicator);
     const finalMessage = messages.join(" ");
-    try {
-      const answer = await reply({
-        input: finalMessage,
-        threadId,
-        assistantId,
-      });
 
-      pendingResponses.delete(indicator);
+    const answer = await reply({
+      input: finalMessage,
+      threadId,
+      assistantId,
+    });
 
-      return answer;
-    } catch (error) {
-      console.error("OpenAI Error:", error);
-      return { success: false, error: "Internal Server Error" };
-    }
+    pendingResponses.delete(indicator);
+    return answer;
   }
   return { success: false, error: "No pending response found" };
 }
 
-// eslint-disable-next-line no-undef
 const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const createThread = async () => await openaiClient.beta.threads.create();
@@ -256,8 +250,5 @@ export default async function sendMessage(body, clinic_id) {
     });
   }
 
-  return {
-    status: 200,
-    data: { message: "Message received and will be handled shortly" },
-  };
+  return { message: "Message received and will be handled soon." };
 }

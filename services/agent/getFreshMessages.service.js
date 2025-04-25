@@ -1,26 +1,24 @@
 import user from "../../db/models/User.js";
 import { getChannelIndicator } from "../../utils/channel.js";
+import ApiError from "../../utils/api/ApiError.js";
 
 export default async function getFreshMessages(body, clinic_id) {
   const indicator = getChannelIndicator(body.channel) ?? null;
 
   if (!clinic_id) {
-    return { status: 400, data: { error: "clinic_id is required" } };
+    throw new ApiError(400, "clinic_id is required");
   }
 
   if (!body.channel) {
-    return { status: 400, data: { error: "channel is required" } };
+    throw new ApiError(400, "channel is required");
   }
 
   if (!indicator) {
-    return { status: 400, data: { error: "Invalid channel" } };
+    throw new ApiError(400, "Invalid channel");
   }
 
   if (!body.contact_data?.[indicator]) {
-    return {
-      status: 400,
-      data: { error: `${indicator} is required` },
-    };
+    throw new ApiError(400, `${indicator} is required`);
   }
 
   const customer = await user.findOne({
@@ -30,7 +28,7 @@ export default async function getFreshMessages(body, clinic_id) {
   });
 
   if (!customer) {
-    return { status: 404, data: { error: "Customer not found" } };
+    throw new ApiError(400, `No such user`);
   }
 
   const messages = customer.channels[body.channel].messages;
@@ -39,7 +37,7 @@ export default async function getFreshMessages(body, clinic_id) {
   );
 
   if (fresh_messages.length === 0) {
-    return { status: 404, data: { error: "No fresh messages" } };
+    throw new ApiError(404, "No fresh messages.");
   }
 
   await user.updateOne(
@@ -59,18 +57,15 @@ export default async function getFreshMessages(body, clinic_id) {
   );
 
   return {
-    status: 200,
-    data: {
-      version: "v2",
-      content: {
-        type: body.channel,
-        messages: fresh_messages.map((message) => ({
-          type: message.type,
-          text: message.content,
-        })),
-        actions: [],
-        quick_replies: [],
-      },
+    version: "v2",
+    content: {
+      type: body.channel,
+      messages: fresh_messages.map((message) => ({
+        type: message.type,
+        text: message.content,
+      })),
+      actions: [],
+      quick_replies: [],
     },
   };
 }

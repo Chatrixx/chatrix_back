@@ -1,11 +1,11 @@
-import Notification from "../../db/models/notification.js";
+import Notification from "../../db/models/Notification.js";
+import ApiError from "../../utils/api/ApiError.js";
 
 export default async function getNotificationById({ notification_id }) {
-  try {
-    const notification = await Notification.findById(notification_id);
-    return notification;
-  } catch (error) {
-    console.error("Error fetching notification by ID:", error);
-    throw new Error("Failed to fetch notification");
-  }
+  const notification = await Notification.findById(notification_id).orFail(
+    () => {
+      throw new ApiError(404, "No notification found with given id.");
+    }
+  );
+  return notification;
 }

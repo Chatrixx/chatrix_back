@@ -1,29 +1,19 @@
 import AgentService from "../services/agent/index.js";
+import { catchAsync } from "../utils/api/catchAsync.js";
+
+const SendMessage = catchAsync(async (req, res) => {
+  const data = await AgentService.sendMessage(req.body, req.user?.userId);
+  res.status(200).json(data);
+});
+
+const GetFreshMessages = catchAsync(async (req, res) => {
+  const data = await AgentService.getFreshMessages(req.body, req.user?.userId);
+  res.status(200).json(data);
+});
 
 const AgentController = {
-  async sendMessage(req, res, next) {
-    try {
-      const response = await AgentService.sendMessage(
-        req.body,
-        req.user?.userId
-      );
-      res.status(response.status || 200).json(response.data);
-    } catch (error) {
-      next(error); // global error handler
-    }
-  },
-
-  async getFreshMessages(req, res, next) {
-    try {
-      const response = await AgentService.getFreshMessages(
-        req.body,
-        req.user?.userId
-      );
-      res.status(response.status || 200).json(response.data);
-    } catch (error) {
-      next(error);
-    }
-  },
+  SendMessage,
+  GetFreshMessages,
 };
 
 export default AgentController;
