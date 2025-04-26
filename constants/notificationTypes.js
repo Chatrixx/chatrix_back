@@ -1,3 +1,3 @@
-export const CHANNELS = {
-  PHONE_NUMBER: "phone_number",
+export const NOTIFICATION_TYPES = {
+  PHONE_NUMBER_GIVEN: "phone_data_given",
 };

@@ -11,6 +11,7 @@ import analyticsRoutes from "./routes/analytics.routes.js";
 import chatsRoutes from "./routes/chats.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import sseRoutes from "./routes/sse.routes.js";
 import { corsOptions } from "./config/cors.js";
 
 dotenv.config();
@@ -36,6 +37,8 @@ app.use("/api/analytics/", auth, analyticsRoutes);
 app.use("/api/chats/", auth, chatsRoutes);
 
 app.use("/api/notifications/", auth, notificationRoutes);
+
+app.use("/api/sse/", auth, sseRoutes);
 
 app.use(notFoundHandler);
 

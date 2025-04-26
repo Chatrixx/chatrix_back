@@ -3,7 +3,12 @@ import { catchAsync } from "../utils/api/catchAsync.js";
 
 const GetAllChats = catchAsync(async (req, res) => {
   const userId = req.user?.userId;
-  res.json(await ChatsService.getAll({ clinic_id: userId }));
+  res.json(
+    await ChatsService.getAll({
+      clinic_id: userId,
+      channel: req.query.channel,
+    })
+  );
 });
 
 const GetUserChatsByChannel = catchAsync(async (req, res) => {

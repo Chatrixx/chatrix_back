@@ -1,4 +1,4 @@
-import Clinic from "../../db/models/clinic.js";
+import Clinic from "../../db/models/Clinic.js";
 import OpenAI from "openai";
 import ApiError from "../../utils/api/ApiError.js";
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

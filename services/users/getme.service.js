@@ -1,4 +1,4 @@
-import clinic from "../../db/models/clinic.js";
+import clinic from "../../db/models/Clinic.js";
 import ApiError from "../../utils/api/ApiError.js";
 
 export default async function getMe(userId) {
