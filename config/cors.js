@@ -18,8 +18,9 @@
 // };
 
 export const corsOptions = {
-  origin: "*",
-  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-  // credentials: true,
-  exposedHeaders: ["Authorization"],
+  origin: (origin, callback) => callback(null, origin || "*"), // reflect any origin
+  credentials: true, // allow cookies, auth headers
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"], // allow all methods
+  allowedHeaders: ["Content-Type", "Authorization"], // allow common headers
+  exposedHeaders: ["Authorization"], // allow frontend access to this header
 };
