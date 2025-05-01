@@ -24,6 +24,8 @@ dbConnect().then(() => console.log("Connected to DB ✅"));
 
 app.use(express.json());
 
+app.options("*", cors(corsOptions));
+
 app.use(cors(corsOptions));
 
 app.use("/api/auth", authRoutes);

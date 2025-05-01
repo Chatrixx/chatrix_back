@@ -4,20 +4,22 @@
 //   "https://hkaratas.com",
 // ];
 
+// export const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)
+//     ) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+//   credentials: true, // allow cookies or auth headers
+//   exposedHeaders: ["Authorization"], // allow frontend access to this header
+// };
+
 export const corsOptions = {
-  // origin: function (origin, callback) {
-  //   if (
-  //     !origin ||
-  //     allowedOrigins.includes(origin) ||
-  //     /^https:\/\/chatrix-v1-.*\.vercel\.app$/.test(origin) // allow preview branches
-  //   ) {
-  //     callback(null, true);
-  //   } else {
-  //     callback(new Error("Not allowed by CORS"));
-  //   }
-  // },
-  origin: "*",
-  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"], // Allow all methods
-  credentials: true, // allow cookies or auth headers
-  exposedHeaders: ["Authorization"], // allow frontend access to this header
+  origin: (origin, callback) => callback(null, origin || "*"),
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+  credentials: true,
+  exposedHeaders: ["Authorization"],
 };
