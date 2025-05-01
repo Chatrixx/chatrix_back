@@ -17,6 +17,7 @@ export const corsOptions = {
   //   }
   // },
   origin: "*",
+  methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"], // Allow all methods
   credentials: true, // allow cookies or auth headers
   exposedHeaders: ["Authorization"], // allow frontend access to this header
 };
