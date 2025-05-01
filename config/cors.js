@@ -5,17 +5,18 @@ const allowedOrigins = [
 ];
 
 export const corsOptions = {
-  origin: function (origin, callback) {
-    if (
-      !origin ||
-      allowedOrigins.includes(origin) ||
-      /^https:\/\/chatrix-v1-.*\.vercel\.app$/.test(origin) // allow preview branches
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  // origin: function (origin, callback) {
+  //   if (
+  //     !origin ||
+  //     allowedOrigins.includes(origin) ||
+  //     /^https:\/\/chatrix-v1-.*\.vercel\.app$/.test(origin) // allow preview branches
+  //   ) {
+  //     callback(null, true);
+  //   } else {
+  //     callback(new Error("Not allowed by CORS"));
+  //   }
+  // },
+  origin: "*",
   credentials: true, // allow cookies or auth headers
   exposedHeaders: ["Authorization"], // allow frontend access to this header
 };
