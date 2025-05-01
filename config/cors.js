@@ -1,8 +1,8 @@
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://chatrix-v1.vercel.app",
-  "https://hkaratas.com",
-];
+// const allowedOrigins = [
+//   "http://localhost:3000",
+//   "https://chatrix-v1.vercel.app",
+//   "https://hkaratas.com",
+// ];
 
 export const corsOptions = {
   // origin: function (origin, callback) {
