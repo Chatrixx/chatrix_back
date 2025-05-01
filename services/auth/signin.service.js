@@ -1,10 +1,10 @@
-import clinic from "../../db/models/Clinic.js";
+import Clinic from "../../db/models/Clinic";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import ApiError from "../../utils/api/ApiError.js";
 
 export default async function signin({ email, password }) {
-  const user = await clinic.findOne({ email });
+  const user = await Clinic.findOne({ email });
   const isMatch = user ? await bcrypt.compare(password, user?.password) : false;
   if (!isMatch || !user) {
     throw new ApiError(401, "Hatalı email veya kullanıcı adı.");
