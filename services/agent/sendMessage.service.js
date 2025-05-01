@@ -22,6 +22,33 @@ const openaiClient = createOpenAiClient();
 
 const MAX_MESSAGE_INTERARRIVAL_DURATION = 5500;
 
+// Helper Functions -------------------
+async function sendSummaryIfTriggered({
+  input,
+  messages,
+  customer,
+  contact_channel,
+  clinic_id,
+}) {
+  const phoneNumber = extractTurkishPhoneNumber(input);
+  if (!phoneNumber || !(messages.length > 0)) return;
+  const formatted = messages.map((msg) => ({
+    sender: msg.role === "agent" ? "assistant" : "user",
+    text: msg.content,
+  }));
+  const summary = await summarizeChat(formatted);
+  insertNotification({
+    body: {
+      summary,
+      phoneNumber,
+      userId: customer._id,
+      channel: contact_channel,
+    },
+    notification_type: NOTIFICATION_TYPES.PHONE_NUMBER_GIVEN,
+    clinic_id,
+  });
+}
+
 async function getAggregatedReply(userKey, assistantId) {
   if (pendingResponses.has(userKey)) {
     const { messages, threadId } = pendingResponses.get(userKey);
@@ -37,13 +64,14 @@ async function getAggregatedReply(userKey, assistantId) {
   }
   return null;
 }
+// ------------------------------------------------------------
 
 export default async function sendMessage(body, clinic_id) {
   if (!body.input) {
     return { status: 400, data: { error: "Input is required" } };
   }
 
-  const indicator = getChannelIndicator(body.channel) ?? null;
+  const channelUserKey = getChannelIndicator(body.channel) ?? null;
 
   const related_clinic = await clinic.findById(clinic_id);
 
@@ -53,8 +81,8 @@ export default async function sendMessage(body, clinic_id) {
   const { input } = body;
 
   let customer = await User.findOne({
-    [`channels.${body.channel}.profile_info.${indicator}`]:
-      body.contact_data?.[indicator],
+    [`channels.${body.channel}.profile_info.${channelUserKey}`]:
+      body.contact_data?.[channelUserKey],
     clinic_id: clinic_id,
   });
 
@@ -71,7 +99,7 @@ export default async function sendMessage(body, clinic_id) {
       channels: {
         [contact_channel]: {
           profile_info: {
-            [indicator]: body.contact_data?.[indicator],
+            [channelUserKey]: body.contact_data?.[channelUserKey],
             name: body.contact_data.full_name,
             profile_pic: body.contact_data.profile_pic,
             phone: body.phone ?? null,
@@ -84,30 +112,18 @@ export default async function sendMessage(body, clinic_id) {
     });
   }
   const uniqueUserKey =
-    customer.channels[contact_channel].profile_info[indicator];
+    customer.channels[contact_channel].profile_info[channelUserKey];
 
-  const phoneNumber = extractTurkishPhoneNumber(input);
   const channelData = customer?.channels?.[contact_channel];
   const messages = channelData?.messages || [];
 
-  if (phoneNumber && messages.length > 0) {
-    const formatted = messages.map((msg) => ({
-      sender: msg.role === "agent" ? "assistant" : "user",
-      text: msg.content,
-    }));
-
-    const summary = await summarizeChat(formatted);
-    insertNotification({
-      body: {
-        summary,
-        phoneNumber,
-        userId: customer._id,
-        channel: contact_channel,
-      },
-      notification_type: NOTIFICATION_TYPES.PHONE_NUMBER_GIVEN,
-      clinic_id,
-    });
-  }
+  sendSummaryIfTriggered({
+    input,
+    clinic_id,
+    contact_channel,
+    customer,
+    messages,
+  });
 
   const handleSendReply = async () => {
     const answer = await getAggregatedReply(uniqueUserKey, clinic_assistant_id);
