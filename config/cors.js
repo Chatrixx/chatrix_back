@@ -18,8 +18,8 @@
 // };
 
 export const corsOptions = {
-  origin: (origin, callback) => callback(null, origin || "*"),
+  origin: "*",
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-  credentials: true,
+  // credentials: true,
   exposedHeaders: ["Authorization"],
 };
