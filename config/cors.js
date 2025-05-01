@@ -1,6 +1,6 @@
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://chatrix-v1.vercel.app/",
+  "https://chatrix-v1.vercel.app",
   "https://hkaratas.com",
 ];
 
