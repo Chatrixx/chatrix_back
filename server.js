@@ -12,7 +12,7 @@ import chatsRoutes from "./routes/chats.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
-import { corsOptions } from "./config/cors.js";
+// import { corsOptions } from "./config/cors.js";
 
 dotenv.config();
 
@@ -24,9 +24,10 @@ dbConnect().then(() => console.log("Connected to DB ✅"));
 
 app.use(express.json());
 
-app.options("*", cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
 
 app.use("/api/auth", authRoutes);
 
