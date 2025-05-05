@@ -1,20 +1,31 @@
-# Use official Node.js image
-FROM node:18
-
-# Set working directory inside the container
+# ---- Build stage ----
+FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy package.json and package-lock.json first (for caching dependencies)
+# Install deps and build
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy the rest of the application files
 COPY . .
+RUN npm run build
 
-# Expose the port (Ensure your API runs on this port)
+# ---- Production stage ----
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --only=production
+
+# Copy built JS
+COPY --from=builder /app/dist ./dist
+
+# Set NODE_ENV
+ENV NODE_ENV=production
+
+# Expose port
 EXPOSE 3000
 
-# Command to run the application
-CMD ["node", "server.js"]
+# Run app
+CMD ["node", "dist/server.js"]
+    
