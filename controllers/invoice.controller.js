@@ -1,4 +1,4 @@
-import InvoiceService from "../services/invoices/index.js";
+import InvoiceService from "../services/invoice/index.js";
 import { catchAsync } from "../utils/api/catchAsync.js";
 
 const GetInvoices = catchAsync(async (req, res) => {
