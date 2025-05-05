@@ -1,13 +1,11 @@
 import Notification from "#db/models/Notification.js";
-import ApiError from "#utils/api/ApiError.js";
 
 interface Parameters {
   clinic_id: string;
 }
 
 export default async function getAllNotifications({ clinic_id }: Parameters) {
-  return await Notification.find({ clinic_id })
-  .sort({
+  return await Notification.find({ clinic_id }).sort({
     date: -1,
   });
 }
