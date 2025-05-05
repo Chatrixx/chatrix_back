@@ -14,7 +14,8 @@ import userRoutes from "./routes/user.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
 import { corsOptions } from "./config/cors.js";
 import invoiceRoutes from "./routes/invoice.routes.js";
-
+import appointmentRoutes from "./routes/appointment.routes.js";
+import treatmentRoutes from "./routes/treatment.routes.js";
 
 
 dotenv.config();
@@ -44,7 +45,11 @@ app.use("/api/notifications/", auth, notificationRoutes);
 
 app.use("/api/sse/", auth, sseRoutes);
 
-app.use("/api/invoices", invoiceRoutes);
+app.use("/api/invoices", auth, invoiceRoutes);
+
+app.use("/api/appointments", auth, appointmentRoutes);
+
+app.use("/api/treatments", auth, treatmentRoutes);
 
 app.use(notFoundHandler);
 

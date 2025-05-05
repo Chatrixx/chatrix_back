@@ -2,10 +2,12 @@ import Invoice from "../../db/models/invoice.js";
 import updateOverdueInvoices from "./updateOverdueInvoices.service.js";
 
 export default async function getInvoices(query) {
-  
+
+
   await updateOverdueInvoices();
   
   const mongoQuery = {};
+  mongoQuery.isDeleted = false; // Add this line to ignore deleted ones
 
   // Exact matches
   if (query.user_id) mongoQuery.user = query.user_id;
