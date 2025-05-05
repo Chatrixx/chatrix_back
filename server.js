@@ -13,6 +13,9 @@ import notificationRoutes from "./routes/notifications.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
 import { corsOptions } from "./config/cors.js";
+import invoiceRoutes from "./routes/invoice.routes.js";
+
+
 
 dotenv.config();
 
@@ -40,6 +43,8 @@ app.use("/api/chats/", auth, chatsRoutes);
 app.use("/api/notifications/", auth, notificationRoutes);
 
 app.use("/api/sse/", auth, sseRoutes);
+
+app.use("/api/invoices", invoiceRoutes);
 
 app.use(notFoundHandler);
 
