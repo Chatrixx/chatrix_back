@@ -56,7 +56,7 @@ export default async function sendMessage(input: string, clinic_id: string) {
     const answer = (await getAggregatedReply(
       uniqueUserKey,
       clinic_assistant_id
-    )) as any;
+    ));
 
     if (!answer) {
       throw new ApiError(500, "Internal Server Error");
