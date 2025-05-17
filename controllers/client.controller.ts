@@ -15,8 +15,19 @@ const GetClients = catchAsync(
   }
 );
 
+const GetClientById = catchAsync(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const client = await ClientService.getClientById({
+      clinic_id: req.auth.user.id,
+      id: req.params.id,
+    });
+    res.json(client);
+  }
+);
+
 const ClientController = {
   GetClients,
+  GetClientById,
 };
 
 export default ClientController;

@@ -19,7 +19,13 @@ export default async function getClients({
       clinic_id: MongoObjectId(clinic_id),
     };
     if (searchTerm?.length > 0) {
-      query.name = { $regex: new RegExp(searchTerm, "i") };
+      const regex = new RegExp(searchTerm, "i");
+      query.$or = [
+        { full_name: { $regex: regex } },
+        { name: { $regex: regex } },
+        { surname: { $regex: regex } },
+        { phone: { $regex: regex } },
+      ];
     }
 
     if (startDate || endDate) {
