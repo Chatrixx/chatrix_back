@@ -49,7 +49,7 @@ app.use("/api/notifications", auth, notificationRoutes);
 
 app.use("/api/test", auth, testRoutes);
 
-app.use("/api/sse", auth, sseRoutes);
+app.use("/api/sse", sseRoutes);
 
 app.use(notFoundHandler);
 
