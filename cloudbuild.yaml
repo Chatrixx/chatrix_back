@@ -1,0 +1,37 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${_ENV}-${SHORT_SHA}',
+      '--build-arg', 'NODE_ENV=${_NODE_ENV}',
+      '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${_ENV}-${SHORT_SHA}']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', '${_API_SERVICE}-${_ENV}',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${_ENV}-${SHORT_SHA}',
+      '--region', '${_REGION}',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--port', '8080',
+      '--set-env-vars', 'NODE_ENV=${_NODE_ENV}',
+      '--set-secrets', '${_SECRETS}'
+    ]
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${_ENV}-${SHORT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: europe-west1
+  _REPOSITORY: chatrix-containers
+  _API_SERVICE: chatrix-back
+
+timeout: 1800s
