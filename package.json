@@ -26,13 +26,12 @@
     "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
     "nodemon": "^3.1.9",
-    "openai": "^4.87.3",
-    "ts-node": "^10.9.2"
+    "openai": "^4.87.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
@@ -53,6 +52,7 @@
     "globals": "^16.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.1"

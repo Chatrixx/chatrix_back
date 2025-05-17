@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { enqueueMessage } from "./threadQueueManager.js";
 
 export const createOpenAiClient = () =>
   new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -38,26 +39,7 @@ export const getOpenAiReply = async (
 ) => {
   if (!input) return;
 
-  console.log("thread id", threadId);
-
   const thread_id = threadId ?? (await createOpenAiThread(client)).id;
 
-  console.log("fixed thread_id:", thread_id);
-
-  // TODO: Handle efficiently later instead of checking all runs's status
-  // await waitForRunCompletion({ thread_id, client });
-  await createOpenAiMessage(client, thread_id, {
-    role: "user",
-    content: input,
-  });
-  const run = await createOpenAiRun(thread_id, assistantId, client);
-
-  while (run.status !== "completed") {
-    if (run.status === "failed")
-      return { messages: null, status: run.status, error: run.last_error };
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-
-  const messages = await client.beta.threads.messages.list(run.thread_id);
-  return { messages, status: run.status, thread_id };
+  return await enqueueMessage(client, thread_id, assistantId, input);
 };
