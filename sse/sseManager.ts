@@ -7,7 +7,13 @@ export const addClient = (userId: string, res: any) => {
     clients.set(userId, new Set());
   }
   clients.get(userId).add(res);
+
+  // Opsiyonel: addClient içinden de başlangıç verisi göndermek istersen:
+  res.write(
+    `data: ${JSON.stringify({ eventType: "INIT", msg: "connected" })}\n\n`
+  );
 };
+
 
 export const removeClient = (userId: string, res: any) => {
   if (clients.has(userId)) {
