@@ -39,12 +39,7 @@ export const getOpenAiReply = async (
 ) => {
   if (!input) return;
 
-  console.log("thread id", threadId);
-
   const thread_id = threadId ?? (await createOpenAiThread(client)).id;
 
-  console.log("fixed thread_id:", thread_id);
-
-  return await enqueueMessage(client, threadId, assistantId, input);
+  return await enqueueMessage(client, thread_id, assistantId, input);
 };
-

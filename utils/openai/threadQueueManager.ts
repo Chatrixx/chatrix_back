@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { MessageContent } from "openai/resources/beta/threads/messages";
 
 interface QueuedMessage {
   content: string;
@@ -15,12 +16,15 @@ export async function enqueueMessage(
   threadId: string,
   assistantId: string,
   content: string
-): Promise<any> {
+): Promise<{
+  content: any;
+  thread_id: string;
+  status: string;
+}> {
   return new Promise((resolve, reject) => {
     const queue = queues.get(threadId) || [];
     queue.push({ content, assistantId, resolve, reject });
     queues.set(threadId, queue);
-
     if (!processingThreads.has(threadId)) {
       processQueue(threadId, client);
     }
@@ -55,11 +59,16 @@ async function processQueue(threadId: string, client: OpenAI) {
         throw new Error("Run failed or incomplete");
       }
 
-      // 4. Get messages
+      // 4. Get last reply
       const messages = await client.beta.threads.messages.list(threadId);
 
+      //Used type union because OpenAi's MessageContent type conflicts with its response
+      const { text } = messages.data[0].content[0] as MessageContent & {
+        text: { value: string; annotations: any[] };
+      };
+
       resolve({
-        messages: messages.data,
+        content: text.value,
         thread_id: threadId,
         status: run.status,
       });
@@ -84,7 +93,10 @@ async function waitForActiveRun(threadId: string, client: OpenAI) {
   if (!active) return;
 
   while (true) {
-    const current = await client.beta.threads.runs.retrieve(active.id, threadId);
+    const current = await client.beta.threads.runs.retrieve(
+      active.id,
+      threadId
+    );
     if (current.status === "completed" || current.status === "failed") break;
     await new Promise((r) => setTimeout(r, 1000));
   }

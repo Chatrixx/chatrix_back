@@ -53,19 +53,15 @@ export default async function sendMessage(input: string, clinic_id: string) {
   const uniqueUserKey = `${clinic_id}_TEST_USER`;
 
   const handleSendReply = async () => {
-    const answer = (await getAggregatedReply(
-      uniqueUserKey,
-      clinic_assistant_id
-    ));
+    const answer = await getAggregatedReply(uniqueUserKey, clinic_assistant_id);
 
     if (!answer) {
       throw new ApiError(500, "Internal Server Error");
     }
 
-    const agent_reply = answer.messages.body?.data[0]?.content[0]?.text?.value;
-
+    const { content } = answer;
     const agent_message = {
-      content: removeEmojisAndExclamations(agent_reply),
+      content: removeEmojisAndExclamations(content),
       type: "text",
       timestamp: new Date(),
       fresh: true,
