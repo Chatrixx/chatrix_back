@@ -16,7 +16,7 @@
     "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi"
   },
   "imports": {
-    "#*": "./*"
+    "#*": "./dist/*"
   },
   "keywords": [],
   "author": "",

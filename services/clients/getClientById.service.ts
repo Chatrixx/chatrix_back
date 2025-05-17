@@ -1,5 +1,5 @@
 import Client from "#db/models/Client.js";
-import ApiError from "#utils/api/ApiError";
+import ApiError from "#utils/api/ApiError.js";
 import { MongoObjectId } from "#utils/mongoose/casters.js";
 
 interface Parameters {
