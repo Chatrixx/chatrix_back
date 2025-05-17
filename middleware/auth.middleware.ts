@@ -16,9 +16,7 @@ const auth = (
   const authHeader = req.header("Authorization");
 
   if (!authHeader?.startsWith("Bearer ")) {
-    return res
-      .status(401)
-      .json({ message: "Access denied. No token provided." });
+    return res.status(401).json({ message: "Access denied." });
   }
 
   const token = authHeader.split(" ")[1];
