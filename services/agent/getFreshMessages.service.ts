@@ -37,7 +37,7 @@ export default async function getFreshMessages(
       version: "v2",
       content: {
         type: body.channel,
-        messages: [""],
+        messages: [],
         actions: [],
         quick_replies: [],
       },
