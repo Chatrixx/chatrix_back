@@ -33,7 +33,15 @@ export default async function getFreshMessages(
   );
 
   if (!fresh_messages || fresh_messages.length === 0) {
-    throw new ApiError(404, "No fresh messages.");
+    return {
+      version: "v2",
+      content: {
+        type: body.channel,
+        messages: [""],
+        actions: [],
+        quick_replies: [],
+      },
+    };
   }
 
   await Client.updateOne(
