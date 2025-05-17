@@ -3,18 +3,18 @@ steps:
     args: [
       'build',
       '-t',
-      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${SHORT_SHA}',
+      '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_API_SERVICE}:${SHORT_SHA}',
       '--build-arg', 'NODE_ENV=${_NODE_ENV}',
       '.']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${SHORT_SHA}']
+    args: ['push', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_API_SERVICE}:${SHORT_SHA}']
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
       'run', 'deploy', '${_API_SERVICE}-${_ENV}',
-      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${SHORT_SHA}',
+      '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_API_SERVICE}:${SHORT_SHA}',
       '--region', '${_REGION}',
       '--platform', 'managed',
       '--allow-unauthenticated',
