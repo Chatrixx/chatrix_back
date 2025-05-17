@@ -20,7 +20,12 @@ steps:
       '--allow-unauthenticated',
       '--port', '8080',
       '--set-env-vars', 'NODE_ENV=${_NODE_ENV}',
-      '--set-secrets', '${_SECRETS}'
+      '--set-secrets', '${_SECRETS}',
+      '--memory=${_MEMORY}',
+      '--cpu=${_CPU}',
+      '--min-instances=${_MIN_INSTANCES}',
+      '--max-instances=${_MAX_INSTANCES}',
+      '--concurrency=${_CONCURRENCY}'
     ]
 
 images:

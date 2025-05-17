@@ -3,6 +3,7 @@ import { CorsOptions } from "cors";
 const allowedOrigins = [
   "http://localhost:3000",
   "https://chatrix-v1.vercel.app",
+  "https://chatrix-front-728855696411.europe-west1.run.app",
   "https://hkaratas.com",
 ];
 
