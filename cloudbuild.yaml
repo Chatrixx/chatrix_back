@@ -13,7 +13,7 @@ steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args: [
-      'run', 'deploy', '${_API_SERVICE}-${_ENV}',
+      'run', 'deploy', '${_API_SERVICE}',
       '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_API_SERVICE}:${SHORT_SHA}',
       '--region', '${_REGION}',
       '--platform', 'managed',
