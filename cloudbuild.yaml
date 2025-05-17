@@ -24,7 +24,7 @@ steps:
     ]
 
 images:
-  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPOSITORY}/${_API_SERVICE}:${SHORT_SHA}'
 
 options:
   logging: CLOUD_LOGGING_ONLY
