@@ -24,6 +24,7 @@ export default async function getFreshMessages(
   });
 
   if (!client) {
+    await new Promise((resolve) => setTimeout(resolve, 8000)); // wait 8 seconds
     throw new ApiError(400, `No such client`);
   }
 
@@ -33,7 +34,16 @@ export default async function getFreshMessages(
   );
 
   if (!fresh_messages || fresh_messages.length === 0) {
-    throw new ApiError(404, "No fresh messages.");
+    return {
+      version: "v2",
+      content: {
+        type: body.channel,
+        messages: [],
+        actions: [],
+        quick_replies: [],
+      },
+    };
+    // throw new ApiError(404, "No fresh messages.");
   }
 
   await Client.updateOne(

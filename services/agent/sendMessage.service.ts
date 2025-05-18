@@ -16,7 +16,7 @@ const pendingResponses = new Map();
 
 const openaiClient = createOpenAiClient();
 
-const MAX_MESSAGE_INTERARRIVAL_DURATION = 5500;
+const MAX_MESSAGE_INTERARRIVAL_DURATION = 7000;
 
 // Helper Functions -------------------
 async function sendSummaryIfTriggered(
@@ -53,17 +53,19 @@ async function getAggregatedReply(clientKey: string, assistantId: string) {
   if (pendingResponses.has(clientKey)) {
     const { messages, threadId } = pendingResponses.get(clientKey);
     // const mergedMessages = addLeadingNameToMessage(messages.join(" "));
-    const mergedMessages = messages.join(" "); //TODO: Fix the above line's logic and use its
+    const mergedMessages = messages?.join(" "); //TODO: Fix the above line's logic and use its
     const answer = await getOpenAiReply(
       mergedMessages,
       threadId,
       assistantId,
       openaiClient
     );
+
     pendingResponses.delete(clientKey);
     return answer;
+  } else {
+    return null;
   }
-  return null;
 }
 // ------------------------------------------------------------
 

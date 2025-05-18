@@ -1,12 +1,8 @@
 // controllers/sse.controller.ts
 
-import { Request, Response } from "express";
+import { Response } from "express";
 import { addClient, removeClient } from "#sse/sseManager.js";
 import { RequestWithAnyQuery } from "#types/request";
-
-interface SSEQuery {
-  id: string; // ?id=... şeklinde alınacak
-}
 
 const CreateConnection = (req: RequestWithAnyQuery, res: Response) => {
   const userId = req.query.id;
@@ -40,7 +36,6 @@ const CreateConnection = (req: RequestWithAnyQuery, res: Response) => {
     removeClient(userId, res);
     clearInterval(keepAlive);
     res.end();
-    console.log("SSE disconnected:", userId);
   });
 };
 

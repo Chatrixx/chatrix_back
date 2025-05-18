@@ -14,7 +14,6 @@ import clientRoutes from "./routes/client.routes.js";
 import testRoutes from "./routes/test.routes.js";
 import meRoutes from "./routes/me.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
-import { corsOptions } from "./config/cors.js";
 
 dotenv.config();
 
@@ -26,7 +25,7 @@ dbConnect().then(() => console.log("Connected to DB ✅"));
 
 app.use(express.json());
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.status(200).send("Welcome ✨");
