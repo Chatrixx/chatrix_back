@@ -25,7 +25,12 @@ dbConnect().then(() => console.log("Connected to DB ✅"));
 
 app.use(express.json());
 
-app.use(cors());
+app.use(
+  cors({
+    allowedHeaders: "Authorization",
+    credentials: true,
+  })
+);
 
 app.get("/", (req, res) => {
   res.status(200).send("Welcome ✨");
