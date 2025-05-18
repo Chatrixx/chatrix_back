@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Client from "#db/models/Client.js";
 import { IManyChatInstagramPayload } from "#types/manychat.js";
 import ApiError from "#utils/api/ApiError.js";
@@ -7,6 +8,7 @@ export default async function getFreshMessages(
   body: IManyChatInstagramPayload,
   clinic_id: string
 ) {
+  const session = await mongoose.startSession();
   const channelPrimaryKey = getChannelPrimaryKey(body.channel);
 
   if (!clinic_id) {
@@ -17,61 +19,70 @@ export default async function getFreshMessages(
     throw new ApiError(400, `${channelPrimaryKey} is required`);
   }
 
-  const client = await Client.findOne({
-    clinic_id,
-    [`channels.${body.channel}.profile_info.${channelPrimaryKey}`]:
-      body.contact_data[channelPrimaryKey],
-  });
+  let fresh_messages: { type: string; text: string }[] = [];
 
-  if (!client) {
-    await new Promise((resolve) => setTimeout(resolve, 8000)); // wait 8 seconds
-    throw new ApiError(400, `No such client`);
-  }
+  try {
+    await session.withTransaction(async () => {
+      const client = await Client.findOne(
+        {
+          clinic_id,
+          [`channels.${body.channel}.profile_info.${channelPrimaryKey}`]:
+            body.contact_data[channelPrimaryKey],
+        },
+        null,
+        { session }
+      );
 
-  const messages = client.channels?.[body.channel]?.messages;
-  const fresh_messages = messages?.filter(
-    (message) => message.fresh && message.role === "agent"
-  );
+      if (!client) {
+        throw new ApiError(400, `No such client`);
+      }
 
-  if (!fresh_messages || fresh_messages.length === 0) {
+      const messages = client.channels?.[body.channel]?.messages;
+      const all_fresh = messages?.filter(
+        (message) => message.fresh && message.role === "agent"
+      );
+
+      if (!all_fresh || all_fresh.length === 0) {
+        return;
+      }
+
+      fresh_messages = all_fresh.map((message) => ({
+        type: message.type,
+        text: message.content,
+      }));
+
+      // Güncelleme işlemi sadece transaction içinde
+      await Client.updateOne(
+        {
+          clinic_id,
+          [`channels.${body.channel}.profile_info.${channelPrimaryKey}`]:
+            body.contact_data[channelPrimaryKey],
+        },
+        {
+          $set: {
+            [`channels.${body.channel}.messages.$[elem].fresh`]: false,
+          },
+        },
+        {
+          arrayFilters: [{ "elem.fresh": true }],
+          session,
+        }
+      );
+    });
+
     return {
       version: "v2",
       content: {
         type: body.channel,
-        messages: [],
+        messages: fresh_messages,
         actions: [],
         quick_replies: [],
       },
     };
-    // throw new ApiError(404, "No fresh messages.");
+  } catch (err) {
+    console.error("Transaction failed:", err);
+    throw err;
+  } finally {
+    await session.endSession();
   }
-
-  await Client.updateOne(
-    {
-      clinic_id,
-      [`channels.${body.channel}.profile_info.${channelPrimaryKey}`]:
-        body.contact_data[channelPrimaryKey],
-    },
-    {
-      $set: {
-        [`channels.${body.channel}.messages.$[elem].fresh`]: false,
-      },
-    },
-    {
-      arrayFilters: [{ "elem.fresh": true }],
-    }
-  );
-
-  return {
-    version: "v2",
-    content: {
-      type: body.channel,
-      messages: fresh_messages.map((message) => ({
-        type: message.type,
-        text: message.content,
-      })),
-      actions: [],
-      quick_replies: [],
-    },
-  };
 }
