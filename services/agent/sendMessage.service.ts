@@ -54,6 +54,9 @@ async function getAggregatedReply(clientKey: string, assistantId: string) {
     const { messages, threadId } = pendingResponses.get(clientKey);
     // const mergedMessages = addLeadingNameToMessage(messages.join(" "));
     const mergedMessages = messages?.join(" "); //TODO: Fix the above line's logic and use its
+    console.log("Merged messages: ", mergedMessages);
+    pendingResponses.delete(clientKey);
+
     const answer = await getOpenAiReply(
       mergedMessages,
       threadId,
@@ -61,7 +64,6 @@ async function getAggregatedReply(clientKey: string, assistantId: string) {
       openaiClient
     );
 
-    pendingResponses.delete(clientKey);
     return answer;
   } else {
     return null;
@@ -76,6 +78,8 @@ export default async function sendMessage(
   if (!body.input) {
     return { status: 400, data: { error: "Input is required" } };
   }
+
+  console.log("Input: ", body?.input);
 
   const channelPrimaryKey = getChannelPrimaryKey(body.channel);
 

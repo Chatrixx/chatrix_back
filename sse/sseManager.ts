@@ -14,7 +14,6 @@ export const addClient = (userId: string, res: any) => {
   );
 };
 
-
 export const removeClient = (userId: string, res: any) => {
   if (clients.has(userId)) {
     clients.get(userId).delete(res);
