@@ -38,11 +38,11 @@ import { CorsOptions } from "cors";
 
 export const corsOptions: CorsOptions = {
   origin: (requestOrigin, callback) => {
-    if (requestOrigin || !requestOrigin) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    // if (requestOrigin || !requestOrigin) {
+    callback(null, true);
+    // } else {
+    // callback(new Error("Not allowed by CORS"));
+    // }
   },
   credentials: true,
   exposedHeaders: ["Authorization"],
