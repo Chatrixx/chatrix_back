@@ -14,7 +14,7 @@ import clientRoutes from "./routes/client.routes.js";
 import testRoutes from "./routes/test.routes.js";
 import meRoutes from "./routes/me.routes.js";
 import sseRoutes from "./routes/sse.routes.js";
-import { corsOptions } from "config/cors.js";
+import { corsOptions } from "./config/cors.js";
 
 dotenv.config();
 
