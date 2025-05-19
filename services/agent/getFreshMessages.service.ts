@@ -64,7 +64,7 @@ export default async function getFreshMessages(
           },
         },
         {
-          arrayFilters: [{ "elem.fresh": true }],
+          arrayFilters: [{ "elem.fresh": true, "elem.role": "agent" }],
           session,
         }
       );

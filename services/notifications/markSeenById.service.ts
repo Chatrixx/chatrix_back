@@ -1,12 +1,13 @@
 import Notification from "#db/models/Notification.js";
 import ApiError from "#utils/api/ApiError.js";
+import { MongoObjectId } from "#utils/mongoose/casters";
 
 interface Paremeters {
   notification_id: string;
 }
 export default async function markSeenById({ notification_id }: Paremeters) {
   const notification = await Notification.findByIdAndUpdate(
-    notification_id,
+    MongoObjectId(notification_id),
     { $set: { seen: true } },
     { new: true } // Returning updated document
   );

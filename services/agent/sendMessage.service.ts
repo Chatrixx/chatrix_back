@@ -16,7 +16,7 @@ const pendingResponses = new Map();
 
 const openaiClient = createOpenAiClient();
 
-const MAX_MESSAGE_INTERARRIVAL_DURATION = 7000;
+const MAX_MESSAGE_INTERARRIVAL_DURATION = 18000;
 
 // Helper Functions -------------------
 async function sendSummaryIfTriggered(
@@ -54,7 +54,6 @@ async function getAggregatedReply(clientKey: string, assistantId: string) {
     const { messages, threadId } = pendingResponses.get(clientKey);
     // const mergedMessages = addLeadingNameToMessage(messages.join(" "));
     const mergedMessages = messages?.join(" "); //TODO: Fix the above line's logic and use its
-    console.log("Merged messages: ", mergedMessages);
     pendingResponses.delete(clientKey);
 
     const answer = await getOpenAiReply(
@@ -64,7 +63,7 @@ async function getAggregatedReply(clientKey: string, assistantId: string) {
       openaiClient
     );
 
-    return answer;
+    return { answer, messages };
   } else {
     return null;
   }
@@ -78,8 +77,6 @@ export default async function sendMessage(
   if (!body.input) {
     return { status: 400, data: { error: "Input is required" } };
   }
-
-  console.log("Input: ", body?.input);
 
   const channelPrimaryKey = getChannelPrimaryKey(body.channel);
 
@@ -141,29 +138,32 @@ export default async function sendMessage(
   sendSummaryIfTriggered(input, clinic_id, client, contact_channel, messages);
 
   const handleSendReply = async () => {
-    const answer = await getAggregatedReply(
+    const aggregatedResponse = await getAggregatedReply(
       uniqueClientKey,
       clinic_assistant_id
     );
+
+    const answer = aggregatedResponse?.answer;
+    const client_messages = aggregatedResponse?.messages;
     if (!answer) {
       throw new ApiError(500, "Internal Server Error");
     }
 
-    const agent_message = {
-      content: removeEmojisAndExclamations(answer.content),
+    const agent_message_object = {
+      content: removeEmojisAndExclamations(answer?.content),
       type: "text",
       timestamp: new Date(),
       fresh: true,
       role: "agent",
     };
 
-    const client_message = {
-      content: input,
+    const client_message_objects = client_messages.map((m: string) => ({
+      content: m,
       type: "text",
       timestamp: new Date(),
       fresh: true,
       sender: MESSAGE_SENDER_TYPES.CLIENT,
-    };
+    }));
 
     const phoneFromMessage = extractTurkishPhoneNumber(input);
 
@@ -183,7 +183,7 @@ export default async function sendMessage(
         },
         $push: {
           [`channels.${contact_channel}.messages`]: {
-            $each: [client_message, agent_message],
+            $each: [...client_message_objects, agent_message_object],
           },
         },
       }
