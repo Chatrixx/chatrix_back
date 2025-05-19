@@ -18,9 +18,17 @@ const GetAllMessages = catchAsync(
   }
 );
 
+const ClearChatContext = catchAsync(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const data = await TestService.clearChatContext(req.auth.user.id);
+    res.status(200).json(data);
+  }
+);
+
 const TestController = {
   SendMessage,
   GetAllMessages,
+  ClearChatContext,
 };
 
 export default TestController;
