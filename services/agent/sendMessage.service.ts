@@ -16,7 +16,7 @@ const pendingResponses = new Map();
 
 const openaiClient = createOpenAiClient();
 
-const MAX_MESSAGE_INTERARRIVAL_DURATION = 18000;
+const MAX_MESSAGE_INTERARRIVAL_DURATION = 12000;
 
 // Helper Functions -------------------
 async function sendSummaryIfTriggered(

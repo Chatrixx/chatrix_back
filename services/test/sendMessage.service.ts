@@ -11,21 +11,21 @@ const pendingResponses = new Map();
 
 const openaiClient = createOpenAiClient();
 
-const MAX_MESSAGE_INTERARRIVAL_DURATION = 5500;
+const MAX_MESSAGE_INTERARRIVAL_DURATION = 12000;
 
 async function getAggregatedReply(userKey: string, assistantId: string) {
   if (pendingResponses.has(userKey)) {
     const { messages, threadId } = pendingResponses.get(userKey);
     // const mergedMessages = addLeadingNameToMessage(messages.join(" "));
     const mergedMessages = messages.join(" "); //TODO: Fix the above line's logic and use its
+    pendingResponses.delete(userKey);
     const answer = await getOpenAiReply(
       mergedMessages,
       threadId,
       assistantId,
       openaiClient
     );
-    pendingResponses.delete(userKey);
-    return answer;
+    return { answer, messages };
   }
   return null;
 }
@@ -53,8 +53,12 @@ export default async function sendMessage(input: string, clinic_id: string) {
   const uniqueUserKey = `${clinic_id}_TEST_USER`;
 
   const handleSendReply = async () => {
-    const answer = await getAggregatedReply(uniqueUserKey, clinic_assistant_id);
-
+    const aggregatedResponse = await getAggregatedReply(
+      uniqueUserKey,
+      clinic_assistant_id
+    );
+    const answer = aggregatedResponse?.answer;
+    const client_messages = aggregatedResponse?.messages;
     if (!answer) {
       throw new ApiError(500, "Internal Server Error");
     }
@@ -68,13 +72,13 @@ export default async function sendMessage(input: string, clinic_id: string) {
       role: "agent",
     };
 
-    const user_message = {
-      content: input,
+    const client_message_objects = client_messages.map((m: string) => ({
+      content: m,
       type: "text",
       timestamp: new Date(),
       fresh: true,
       role: "user",
-    };
+    }));
 
     await TestClient.updateOne(
       { _id: testUser._id },
@@ -84,7 +88,7 @@ export default async function sendMessage(input: string, clinic_id: string) {
         },
         $push: {
           messages: {
-            $each: [user_message, agent_message],
+            $each: [...client_message_objects, agent_message],
           },
         },
       }
