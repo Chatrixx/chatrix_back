@@ -2,7 +2,7 @@
 
 import { Response } from "express";
 import { addClient, removeClient } from "#sse/sseManager.js";
-import { RequestWithAnyQuery } from "#types/request";
+import { RequestWithAnyQuery } from "#types/request.js";
 
 const CreateConnection = (req: RequestWithAnyQuery, res: Response) => {
   const userId = req.query.id;

@@ -2,7 +2,7 @@
 
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
-import perfectionist from "eslint-plugin-perfectionist";
+import * as pluginImport from "eslint-plugin-import";
 
 export default tseslint.config(
   {
@@ -17,6 +17,9 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    plugins: {
+      import: pluginImport,
     },
     rules: {
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -42,6 +45,24 @@ export default tseslint.config(
         "error",
         { argsIgnorePattern: "^_" },
       ],
+
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          js: "always",
+          jsx: "always",
+          ts: "always",
+          tsx: "always",
+        },
+      ],
+    },
+    settings: {
+      "import/resolver": {
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx"],
+        },
+      },
     },
   },
   {

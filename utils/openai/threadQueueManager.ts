@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { MessageContent } from "openai/resources/beta/threads/messages";
+import { MessageContent } from "openai/resources/beta/threads/messages.js";
 
 interface QueuedMessage {
   content: string;

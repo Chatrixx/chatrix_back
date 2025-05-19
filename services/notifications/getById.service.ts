@@ -1,6 +1,6 @@
 import Notification from "#db/models/Notification.js";
 import ApiError from "#utils/api/ApiError.js";
-import { MongoObjectId } from "#utils/mongoose/casters";
+import { MongoObjectId } from "#utils/mongoose/casters.js";
 
 interface Parameters {
   notification_id: string;
