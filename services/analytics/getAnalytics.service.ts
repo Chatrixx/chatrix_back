@@ -72,9 +72,9 @@ const getAnalyticsFromDB = async (
         },
       },
     },
-    // {
-    //   $sort: { _id: 1 }, // Sort by date (ascending)
-    // },
+    {
+      $sort: { _id: 1 }, // Sort by date (ascending)
+    },
     {
       $project: {
         _id: 0,
@@ -94,7 +94,7 @@ const getAnalyticsFromDB = async (
     },
   ];
 
-  const result = await Client.aggregate(analyticsPipeline);
+  const result = await Client.aggregate(analyticsPipeline as any);
 
   return result;
 };
