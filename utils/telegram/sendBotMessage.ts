@@ -24,8 +24,6 @@ export const sendTelegramBotMessage = async ({
     phoneNumber as string
   } \n **💬 Sohbet Özeti:** ${chatSummary as string}`;
 
-  // const notificationContent = "sa";
-
   await axios.post(botTriggerUrl, {
     parse_mode: "MarkdownV2",
     chat_id: test_id,
