@@ -37,9 +37,7 @@ async function sendSummaryIfTriggered(
         : "client",
     text: msg.content,
   }));
-  const summary = TEST_MODE
-    ? `Test Summary date: ${new Date().toLocaleDateString("tr-TR")}`
-    : await summarizeChat(formatted);
+  const summary = TEST_MODE ? `Test Summary` : await summarizeChat(formatted);
 
   createNotification({
     body: {
