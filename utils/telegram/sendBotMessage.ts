@@ -17,7 +17,7 @@ export const sendTelegramBotMessage = ({ chatId, notification }: Props) => {
   const { title, body } = notification;
   const phoneNumber = body?.phoneNumber ?? "--No Phone Number";
   const chatSummary = body?.summary ?? "--No Summary Found";
-  const userFullName = title.split("Telefon numarası")[0];
+  const userFullName = title?.split("telefon numarası sağladı")?.[0];
 
   const notificationContent = ` ### Yeni Randevu Talebi \n **👤 İsim**: ${userFullName} \n **📞 Telefon Numarası**: ${
     phoneNumber as string
