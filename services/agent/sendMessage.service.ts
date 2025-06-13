@@ -38,12 +38,6 @@ async function sendSummaryIfTriggered(
   // const summary = TEST_MODE ? `Test Summary` : await summarizeChat(formatted);
   const summary = await summarizeChat(formatted);
 
-  // await axios.post(botTriggerUrl, {
-  //   parse_mode: "MarkdownV2",
-  //   chat_id: test_ids[0],
-  //   text: "test content",
-  // });
-
   createNotification({
     body: {
       summary,

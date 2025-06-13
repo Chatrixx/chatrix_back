@@ -11,17 +11,20 @@ interface Props {
   notification: NotificationDocument;
 }
 
-export const sendTelegramBotMessage = async ({ chatId }: Props) => {
-  // const { title, body } = notification;
-  // const phoneNumber = body?.phoneNumber ?? "--No Phone Number";
-  // const chatSummary = body?.summary ?? "--No Summary Found";
-  // const userFullName = title?.split("telefon numarası sağladı")?.[0];
+export const sendTelegramBotMessage = async ({
+  chatId,
+  notification,
+}: Props) => {
+  const { title, body } = notification;
+  const phoneNumber = body?.phoneNumber ?? "--No Phone Number";
+  const chatSummary = body?.summary ?? "--No Summary Found";
+  const notificationTitle = title ?? "Yeni Bildirim";
 
-  // const notificationContent = ` ### Yeni Randevu Talebi \n **👤 İsim**: ${userFullName} \n **📞 Telefon Numarası**: ${
-  //   phoneNumber as string
-  // } \n **💬 Sohbet Özeti:** ${chatSummary as string}`;
+  const notificationContent = ` ### Yeni Randevu Talebi \n **👤 Danışan**: ${notificationTitle} \n **📞 Telefon Numarası**: ${
+    phoneNumber as string
+  } \n **💬 Sohbet Özeti:** ${chatSummary as string}`;
 
-  const notificationContent = "sa";
+  // const notificationContent = "sa";
 
   await axios.post(botTriggerUrl, {
     parse_mode: "MarkdownV2",

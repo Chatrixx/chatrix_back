@@ -25,5 +25,5 @@ export default async function createNotification({
     date: new Date(),
   });
   sendClientEvent(SSE_EVENT_TYPES.NOTIFICATION, clinic_id, notification);
-  sendTelegramBotMessage({ chatId: undefined, notification: notification });
+  sendTelegramBotMessage({ chatId: undefined, notification });
 }
