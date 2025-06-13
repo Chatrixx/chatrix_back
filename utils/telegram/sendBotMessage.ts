@@ -4,36 +4,35 @@ import axios from "axios";
 export const botTriggerUrl =
   "https://api.telegram.org/bot7560185271:AAH0SzdiD7HixCg9iggUjMIFCPebq6Hk0rQ/sendMessage";
 
-export const test_ids = [
-  "7110188599", //Uveys
-];
+export const test_id = "7110188599";
 
 interface Props {
   chatId: string | undefined | null;
   notification: NotificationDocument;
 }
 
-export const sendTelegramBotMessage = ({ chatId, notification }: Props) => {
-  const { title, body } = notification;
-  const phoneNumber = body?.phoneNumber ?? "--No Phone Number";
-  const chatSummary = body?.summary ?? "--No Summary Found";
-  const userFullName = title?.split("telefon numarası sağladı")?.[0];
+export const sendTelegramBotMessage = async ({ chatId }: Props) => {
+  // const { title, body } = notification;
+  // const phoneNumber = body?.phoneNumber ?? "--No Phone Number";
+  // const chatSummary = body?.summary ?? "--No Summary Found";
+  // const userFullName = title?.split("telefon numarası sağladı")?.[0];
 
-  const notificationContent = ` ### Yeni Randevu Talebi \n **👤 İsim**: ${userFullName} \n **📞 Telefon Numarası**: ${
-    phoneNumber as string
-  } \n **💬 Sohbet Özeti:** ${chatSummary as string}
+  // const notificationContent = ` ### Yeni Randevu Talebi \n **👤 İsim**: ${userFullName} \n **📞 Telefon Numarası**: ${
+  //   phoneNumber as string
+  // } \n **💬 Sohbet Özeti:** ${chatSummary as string}`;
 
-`;
+  const notificationContent = "sa";
 
-  const receivers = [...test_ids, chatId];
+  await axios.post(botTriggerUrl, {
+    parse_mode: "MarkdownV2",
+    chat_id: test_id,
+    text: notificationContent,
+  });
+  if (!chatId) return;
 
-  receivers.forEach((c_id) => {
-    if (c_id) {
-      axios.post(botTriggerUrl, {
-        parse_mode: "MarkdownV2",
-        chat_id: c_id,
-        text: notificationContent,
-      });
-    }
+  await axios.post(botTriggerUrl, {
+    parse_mode: "MarkdownV2",
+    chat_id: chatId,
+    text: notificationContent,
   });
 };
