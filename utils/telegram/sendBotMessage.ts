@@ -11,6 +11,10 @@ interface Props {
   notification: NotificationDocument;
 }
 
+function escapeMarkdownV2(text: string): string {
+  return text.replace(/[_*[\]()~`>#+=|{}.!-]/g, (match) => `\\${match}`);
+}
+
 export const sendTelegramBotMessage = async ({
   chatId,
   notification,
@@ -20,9 +24,11 @@ export const sendTelegramBotMessage = async ({
   const chatSummary = body?.summary ?? "--No Summary Found";
   const notificationTitle = title ?? "Yeni Bildirim";
 
-  const notificationContent = ` ### Yeni Randevu Talebi \n **👤 Danışan**: ${notificationTitle} \n **📞 Telefon Numarası**: ${
-    phoneNumber as string
-  } \n **💬 Sohbet Özeti:** ${chatSummary as string}`;
+  const notificationContent =
+    `\\#\\#\\# Yeni Randevu Talebi\n` +
+    `*👤 Danışan*: ${escapeMarkdownV2(notificationTitle)}\n` +
+    `*📞 Telefon Numarası*: ${escapeMarkdownV2(phoneNumber)}\n` +
+    `*💬 Sohbet Özeti:* ${escapeMarkdownV2(chatSummary)}`;
 
   await axios.post(botTriggerUrl, {
     parse_mode: "MarkdownV2",
