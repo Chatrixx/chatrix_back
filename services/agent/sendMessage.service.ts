@@ -18,6 +18,8 @@ const openaiClient = createOpenAiClient();
 
 const MAX_MESSAGE_INTERARRIVAL_DURATION = 12000;
 
+const TEST_MODE = true;
+
 // Helper Functions -------------------
 async function sendSummaryIfTriggered(
   input: string,
@@ -35,7 +37,10 @@ async function sendSummaryIfTriggered(
         : "client",
     text: msg.content,
   }));
-  const summary = await summarizeChat(formatted);
+  const summary = TEST_MODE
+    ? `Test Summary date: ${new Date().toLocaleDateString("tr-TR")}`
+    : await summarizeChat(formatted);
+
   createNotification({
     body: {
       summary,

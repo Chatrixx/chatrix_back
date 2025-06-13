@@ -2,6 +2,7 @@ import { CHANNELS, IChannel } from "#constants/channels.js";
 import Client from "#db/models/Client.js";
 import ApiError from "#utils/api/ApiError.js";
 import { MongoObjectId } from "#utils/mongoose/casters.js";
+import { differenceInMilliseconds, subMilliseconds } from "date-fns";
 
 const getAnalyticsFromDB = async (
   clinic_id: string,
@@ -118,28 +119,57 @@ export default async function getAnalytics({
     throw new ApiError(400, "clinic_id is required");
   }
 
-  const analytics = await getAnalyticsFromDB(
-    clinic_id,
-    startDate,
-    endDate,
-    channel,
-    groupBy
-  );
+  let previousStart: Date | undefined = undefined;
+  let previousEnd: Date | undefined = undefined;
 
-  const total_messengers = analytics.reduce(
-    (acc, curr) => acc + curr.totalMessengers,
-    0
-  );
-  const total_phone_numbers_given = analytics.reduce(
-    (acc, curr) => acc + curr.totalPhoneNumbersGiven,
-    0
-  );
+  if (startDate && endDate) {
+    const duration = differenceInMilliseconds(endDate, startDate);
+    previousStart = subMilliseconds(startDate, duration);
+    previousEnd = subMilliseconds(endDate, duration);
+  }
+
+  const [currentAnalytics, previousAnalytics] = await Promise.all([
+    getAnalyticsFromDB(clinic_id, startDate, endDate, channel, groupBy),
+    getAnalyticsFromDB(clinic_id, previousStart, previousEnd, channel, groupBy),
+  ]);
+
+  const sumBy = (arr: any[], key: string) =>
+    arr.reduce((acc, curr) => acc + (curr[key] || 0), 0);
+
+  const totalMessengersCurrent = sumBy(currentAnalytics, "totalMessengers");
+  const totalMessengersPrevious = sumBy(previousAnalytics, "totalMessengers");
+
+  const total_messengers = {
+    current: totalMessengersCurrent,
+    previous: totalMessengersPrevious,
+    change:
+      ((totalMessengersCurrent - totalMessengersPrevious) /
+        totalMessengersPrevious) *
+      100,
+  };
+
+  const total_phone_numbers_given = {
+    current: sumBy(currentAnalytics, "totalPhoneNumbersGiven"),
+    previous: sumBy(previousAnalytics, "totalPhoneNumbersGiven"),
+  };
+
+  const total_phone_ratio = {
+    current: total_messengers.current
+      ? +(total_phone_numbers_given.current / total_messengers.current).toFixed(
+          2
+        )
+      : 0,
+    previous: total_messengers.previous
+      ? +(
+          total_phone_numbers_given.previous / total_messengers.previous
+        ).toFixed(2)
+      : 0,
+  };
 
   return {
-    data_series: analytics,
+    data_series: currentAnalytics,
     total_messengers,
     total_phone_numbers_given,
-    total_phone_ratio:
-      (total_phone_numbers_given ?? 0 / total_messengers).toFixed(2) * 1,
+    total_phone_ratio,
   };
 }
