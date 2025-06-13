@@ -11,6 +11,8 @@ import { removeEmojisAndExclamations } from "#utils/message.js";
 import { createOpenAiClient, getOpenAiReply } from "#utils/openai/index.js";
 import { extractTurkishPhoneNumber } from "#utils/phone.js";
 import { summarizeChat } from "#utils/summarize_chat.js";
+import { botTriggerUrl, test_ids } from "#utils/telegram/sendBotMessage.js";
+import axios from "axios";
 
 const pendingResponses = new Map();
 
@@ -38,6 +40,12 @@ async function sendSummaryIfTriggered(
     text: msg.content,
   }));
   const summary = TEST_MODE ? `Test Summary` : await summarizeChat(formatted);
+
+  await axios.post(botTriggerUrl, {
+    parse_mode: "MarkdownV2",
+    chat_id: test_ids[0],
+    text: "test content",
+  });
 
   createNotification({
     body: {

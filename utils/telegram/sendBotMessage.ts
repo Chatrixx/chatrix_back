@@ -1,10 +1,10 @@
 import { NotificationDocument } from "#db/models/Notification.js";
 import axios from "axios";
 
-const botTriggerUrl =
+export const botTriggerUrl =
   "https://api.telegram.org/bot7560185271:AAH0SzdiD7HixCg9iggUjMIFCPebq6Hk0rQ/sendMessage";
 
-const test_ids = [
+export const test_ids = [
   "7110188599", //Uveys
 ];
 
