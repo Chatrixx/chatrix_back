@@ -7,7 +7,7 @@ import createNotification from "#services/notifications/create.service.js";
 import { IManyChatInstagramPayload } from "#types/manychat.js";
 import ApiError from "#utils/api/ApiError.js";
 import { getChannelPrimaryKey } from "#utils/channel.js";
-import { removeEmojisAndExclamations } from "#utils/message.js";
+import { addLeadingNameToMessage, removeEmojisAndExclamations } from "#utils/message.js";
 import { createOpenAiClient, getOpenAiReply } from "#utils/openai/index.js";
 import { extractTurkishPhoneNumber } from "#utils/phone.js";
 import { summarizeChat } from "#utils/summarize_chat.js";
@@ -51,11 +51,17 @@ async function sendSummaryIfTriggered(
   });
 }
 
-async function getAggregatedReply(clientKey: string, assistantId: string) {
+async function getAggregatedReply(clientKey: string, assistantId: string, clientName: string) {
   if (pendingResponses.has(clientKey)) {
     const { messages, threadId } = pendingResponses.get(clientKey);
-    // const mergedMessages = addLeadingNameToMessage(messages.join(" "));
-    const mergedMessages = messages?.join(" "); //TODO: Fix the above line's logic and use its
+    if (!messages?.length) return null;
+    
+    const modifiedMessages = [...messages];
+
+    modifiedMessages[0] = addLeadingNameToMessage(modifiedMessages[0], clientName);
+    
+    const mergedMessages = modifiedMessages.join("\n");
+    
     pendingResponses.delete(clientKey);
 
     const answer = await getOpenAiReply(
@@ -142,7 +148,8 @@ export default async function sendMessage(
   const handleSendReply = async () => {
     const aggregatedResponse = await getAggregatedReply(
       uniqueClientKey,
-      clinic_assistant_id
+      clinic_assistant_id,
+      client.full_name ?? "Kullanıcı"
     );
 
     const answer = aggregatedResponse?.answer;

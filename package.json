@@ -13,7 +13,8 @@
     "format:check": "prettier --check .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "check": "npm run lint",
-    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi"
+    "prepare": "node -e \"if (process.env.NODE_ENV !== 'production') require('child_process').execSync('npx husky install', { stdio: 'inherit' })\""
+
   },
   "imports": {
     "#*": "./dist/*"
