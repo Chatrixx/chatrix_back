@@ -4,7 +4,7 @@ import axios from "axios";
 export const botTriggerUrl =
   "https://api.telegram.org/bot7560185271:AAH0SzdiD7HixCg9iggUjMIFCPebq6Hk0rQ/sendMessage";
 
-export const test_id = "7110188599";
+export const test_id = "-4829546485";
 
 interface Props {
   chatId: string | undefined | null;
